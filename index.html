@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixed Wanted — Lua скрипт</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c10;--card:#13131a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --purple:#7c3aed;--purple2:#9d5cf6;--purple3:#c4a0ff;--rose:#c026d3;
+  --text:#f0eeff;--muted:#8878aa;--muted2:#5e5580;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+.bg-blur{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.28}
+.orb1{width:520px;height:520px;background:var(--purple);top:-160px;left:-120px;animation:drift 18s ease-in-out infinite}
+.orb2{width:420px;height:420px;background:var(--rose);bottom:-120px;right:-80px;animation:drift 14s ease-in-out infinite reverse}
+.orb3{width:300px;height:300px;background:#4f46e5;top:38%;left:52%;animation:drift 22s ease-in-out infinite 4s}
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(22px,-26px)}66%{transform:translate(-16px,14px)}}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(12,12,16,0.82);backdrop-filter:blur(22px);border-bottom:1px solid var(--border)}
+.nav-wrap{max-width:1000px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:20px}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--purple3);white-space:nowrap;margin-right:8px}
+.nav-logo span{color:var(--muted)}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;padding:6px 11px;border-radius:7px;transition:all 0.2s;white-space:nowrap}
+.nav-links a:hover{color:var(--purple3);background:rgba(124,58,237,0.1)}
+
+.section-tabs{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:28px 24px 0}
+.tabs-row{display:flex;gap:9px;flex-wrap:wrap}
+.tab-btn{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);color:var(--muted);text-decoration:none;padding:10px 17px;font-size:13px;font-weight:500;border-radius:10px;transition:all 0.25s}
+.tab-btn .ti{display:flex;align-items:center}
+.tab-btn:hover{border-color:rgba(124,58,237,0.35);color:var(--purple3);background:rgba(124,58,237,0.07);transform:translateY(-2px);box-shadow:0 4px 16px rgba(124,58,237,0.12)}
+
+.hero{max-width:1000px;margin:0 auto;padding:56px 24px 52px;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);color:var(--purple3);font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:22px}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:var(--purple2);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+.hero h1{font-size:clamp(32px,5.5vw,56px);font-weight:700;line-height:1.08;letter-spacing:-1.5px;margin-bottom:16px}
+.hero h1 span{background:linear-gradient(135deg,var(--purple2),var(--rose),#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:520px;margin-bottom:32px}
+.hero-sub b{color:var(--purple3);font-weight:500}
+.hero-btns{display:flex;gap:11px;flex-wrap:wrap}
+.btn-main{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--purple),var(--rose));border:none;color:#fff;padding:11px 24px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;text-decoration:none;box-shadow:0 4px 22px rgba(124,58,237,0.35);transition:all 0.25s}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,0.5)}
+.btn-sec{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--border2);color:var(--muted);padding:10px 20px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border-radius:10px;text-decoration:none;transition:all 0.25s}
+.btn-sec:hover{border-color:rgba(124,58,237,0.4);color:var(--purple3)}
+
+.stats{max-width:1000px;margin:0 auto;padding:0 24px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;position:relative;z-index:1}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;text-align:center}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;background:linear-gradient(135deg,var(--purple2),#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+.divider{border:none;border-top:1px solid var(--border);margin:0}
+
+.section{max-width:1000px;margin:0 auto;padding:56px 24px;position:relative;z-index:1}
+.sec-tag{display:inline-block;font-size:11px;font-weight:600;color:var(--purple3);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+.sec-tag::before{content:'// '}
+.sec-title{font-size:clamp(20px,3vw,28px);font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
+.sec-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:32px}
+
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;transition:all 0.3s;position:relative;overflow:hidden}
+.feat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--rose));transform:scaleX(0);transform-origin:left;transition:transform 0.35s}
+.feat:hover{border-color:rgba(124,58,237,0.28);transform:translateY(-3px)}
+.feat:hover::before{transform:scaleX(1)}
+.feat-ico{width:36px;height:36px;border-radius:9px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.18);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.feat h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.feat p{font-size:13px;color:var(--muted);line-height:1.6}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple3)}
+
+.law-block{margin-bottom:16px}
+.law-block:last-child{margin-bottom:0}
+.law-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.law-head{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.law-head-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;background:rgba(124,58,237,0.13);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.law-head-title{font-size:13px;font-weight:600;color:var(--text)}
+.law-items{padding:4px 0}
+.law-item{display:flex;align-items:center;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(255,255,255,0.028);transition:background 0.18s}
+.law-item:last-child{border-bottom:none}
+.law-item:hover{background:rgba(124,58,237,0.045)}
+.law-art{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);min-width:26px;flex-shrink:0}
+.law-desc{color:var(--text);flex:1;font-size:13px;line-height:1.35}
+.law-lvl{font-size:11px;font-weight:600;background:rgba(124,58,237,0.13);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:5px;white-space:nowrap;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.law-fine{font-size:11px;font-weight:500;color:#86efac;font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0}
+.law-warn{font-size:11px;font-weight:500;color:#fbbf24;font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0}
+.law-note{font-size:11px;color:var(--muted2);padding:7px 18px 9px;border-top:1px solid rgba(255,255,255,0.04);line-height:1.5}
+.law-note::before{content:'※ ';color:var(--purple3)}
+
+.commands{display:flex;flex-direction:column;gap:9px}
+.cmd{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:15px 18px;display:flex;align-items:flex-start;gap:15px;transition:border-color 0.25s}
+.cmd:hover{border-color:rgba(124,58,237,0.3)}
+.cmd-tag{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--purple3);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);padding:4px 12px;border-radius:7px;white-space:nowrap;flex-shrink:0}
+.cmd-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+.cmd-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* INSTALL */
+.install-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.step{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:15px 18px;display:flex;align-items:flex-start;gap:14px}
+.step-num{width:27px;height:27px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--rose));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.step-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.55}
+.code{font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(124,58,237,0.1);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:1px 6px;border-radius:4px}
+
+/* DOWNLOAD CARD */
+.download-card{
+  background:var(--card);
+  border:1px solid rgba(124,58,237,0.25);
+  border-radius:14px;
+  padding:22px 24px;
+  display:flex;align-items:center;gap:20px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.3s, box-shadow 0.3s;
+}
+.download-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(124,58,237,0.06),rgba(192,38,211,0.04));
+  pointer-events:none;
+}
+.download-card:hover{
+  border-color:rgba(124,58,237,0.45);
+  box-shadow:0 8px 32px rgba(124,58,237,0.15);
+}
+.dl-icon-wrap{
+  width:56px;height:56px;border-radius:12px;flex-shrink:0;
+  background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.22);
+  display:flex;align-items:center;justify-content:center;
+}
+.dl-info{flex:1}
+.dl-filename{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.dl-meta{font-size:12px;color:var(--muted);display:flex;gap:14px}
+.dl-meta span{display:flex;align-items:center;gap:5px}
+.dl-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--purple),var(--rose));
+  border:none;color:#fff;padding:10px 20px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;border-radius:9px;text-decoration:none;
+  box-shadow:0 4px 18px rgba(124,58,237,0.35);
+  transition:all 0.25s;white-space:nowrap;flex-shrink:0;
+}
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(124,58,237,0.5)}
+
+.dev-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.dev-avatar{width:56px;height:56px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--rose));display:flex;align-items:center;justify-content:center}
+.dev-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px}
+.dev-role{font-size:13px;color:var(--muted)}
+
+footer{border-top:1px solid var(--border);position:relative;z-index:1}
+.foot-wrap{max-width:1000px;margin:0 auto;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.foot-copy{font-size:13px;color:var(--muted2)}
+.foot-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hero{animation:fadeUp 0.65s ease both}
+.section-tabs{animation:fadeUp 0.55s ease 0.05s both}
+.stats{animation:fadeUp 0.65s ease 0.1s both}
+</style>
+</head>
+<body>
+
+<div class="bg-blur">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<nav>
+  <div class="nav-wrap">
+    <div class="nav-logo">fixed_wanted<span>.lua</span></div>
+    <div class="nav-links">
+      <a href="#features">Функции</a>
+      <a href="#uk">УК</a>
+      <a href="#ak">АК</a>
+      <a href="#commands">Команды</a>
+      <a href="#install">Установка</a>
+    </div>
+  </div>
+</nav>
+
+<!-- SECTION TABS -->
+<div class="section-tabs">
+  <div class="tabs-row">
+    <a class="tab-btn" href="#features">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Возможности
+    </a>
+    <a class="tab-btn" href="#uk">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>Полный УК
+    </a>
+    <a class="tab-btn" href="#ak">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Полный АК
+    </a>
+    <a class="tab-btn" href="#commands">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>Команды
+    </a>
+    <a class="tab-btn" href="#install">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Установка
+    </a>
+    <a class="tab-btn" href="#dev">
+      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Разработчик
+    </a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><span class="badge-dot"></span>MoonLoader · SA:MP / GTA</div>
+  <h1>Умная выдача<br><span>розыска и штрафов</span></h1>
+  <p class="hero-sub">
+    Lua скрипт для <b>SA:MP RP серверов</b> — быстрый интерфейс по статьям УК и АК,
+    автоматический HTML лог, команды за одно нажатие.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-main" href="#install">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Скачать скрипт
+    </a>
+    <a class="btn-sec" href="#uk">Смотреть статьи</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Статей УК</div></div>
+  <div class="stat-card"><div class="stat-num">31</div><div class="stat-label">Пунктов УК</div></div>
+  <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Статей АК</div></div>
+  <div class="stat-card"><div class="stat-num">HTML</div><div class="stat-label">Авто лог</div></div>
+</div>
+
+<hr class="divider">
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <div class="sec-tag">возможности</div>
+  <h2 class="sec-title">Что умеет скрипт</h2>
+  <p class="sec-sub">Всё что нужно сотруднику — в одном окне</p>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <h3>Быстрая выдача</h3><p>Одна кнопка — и команда <span class="mono">/su</span> отправлена с нужным уровнем розыска автоматически</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <h3>Полный УК</h3><p>8 статей, 31 пункт. Розыск от 1 до 6 звёзд — структурировано по разделам</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h3>АК и штрафы</h3><p>Авто-отправка <span class="mono">/ticket</span> с суммой и розыск по статьям административного кодекса</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <h3>HTML лог</h3><p>Каждая выдача фиксируется в HTML файл — дата, игрок, статья, ссылка на запись</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <h3>МСК время</h3><p>Время в логе автоматически подстраивается под московский часовой пояс</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+      <h3>Быстрый доступ</h3><p>Открытие папки с записями и HTML лога прямо из интерфейса скрипта</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- УК -->
+<div class="section" id="uk">
+  <div class="sec-tag">уголовный кодекс</div>
+  <h2 class="sec-title">Полный УК</h2>
+  <p class="sec-sub">Все статьи и уровни розыска, встроенные в скрипт</p>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 1</span><span class="law-head-title">Причинение вреда здоровью человека</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">1.1</span><span class="law-desc">За безоружное нападение на человека</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">1.2</span><span class="law-desc">За вооружённое нападение на человека</span><span class="law-lvl">4 ★</span></div>
+      <div class="law-item"><span class="law-art">1.3</span><span class="law-desc">За похищение человека</span><span class="law-lvl">5 ★</span></div>
+      <div class="law-item"><span class="law-art">1.4</span><span class="law-desc">За убийство человека</span><span class="law-lvl">6 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 2</span><span class="law-head-title">Оружие и различное снаряжение</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">2.1</span><span class="law-desc">Ношение оружия в боевой готовности в открытом виде</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">2.2</span><span class="law-desc">За незаконное изготовление оружия</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">2.3</span><span class="law-desc">За незаконное хранение оружия</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">2.4</span><span class="law-desc">За продажу патронов и оружия</span><span class="law-lvl">4 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 3</span><span class="law-head-title">Наркотики, психотропные вещества</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">3.1</span><span class="law-desc">За хранение наркотических веществ</span><span class="law-lvl">5 ★</span></div>
+      <div class="law-item"><span class="law-art">3.2</span><span class="law-desc">За продажу наркотических веществ</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">3.3</span><span class="law-desc">За приобретение / употребление наркотических веществ</span><span class="law-lvl">1 ★</span></div>
+      <div class="law-item"><span class="law-art">3.4</span><span class="law-desc">За сбыт наркотических средств в особо крупном размере</span><span class="law-lvl">6 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 4</span><span class="law-head-title">Бандитизм</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">4.1</span><span class="law-desc">Выдача себя за сотрудника силовых структур</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">4.2</span><span class="law-desc">Препятствие движению кортежа, колонны или конвоя</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">4.3</span><span class="law-desc">Нападение на кортеж, колонну или конвой</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">4.4</span><span class="law-desc">Преследование служебного автомобиля во время погони</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">4.5</span><span class="law-desc">За угон транспорта</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">4.6</span><span class="law-desc">За попытку угона частного / служебного транспорта</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">4.7</span><span class="law-desc">Шантаж / вымогательство чужого имущества</span><span class="law-lvl">4 ★</span></div>
+      <div class="law-item"><span class="law-art">4.8</span><span class="law-desc">За совершение ограбления в отношении граждан</span><span class="law-lvl">3 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 5</span><span class="law-head-title">Терроризм</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">5.1</span><span class="law-desc">Совершение теракта путём захвата государственных учреждений</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">5.2</span><span class="law-desc">Захват заложников и причинение вреда их здоровью</span><span class="law-lvl">6 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 6</span><span class="law-head-title">Коррупция</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">6.1</span><span class="law-desc">Дача взятки должностному лицу</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">6.2</span><span class="law-desc">Принятие взятки должностным лицом</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">6.3</span><span class="law-desc">Вымогательство в отношении должностного лица</span><span class="law-lvl">6 ★</span></div>
+      <div class="law-item"><span class="law-art">6.4</span><span class="law-desc">Попытка дачи взятки должностному лицу</span><span class="law-lvl">4 ★</span></div>
+      <div class="law-item"><span class="law-art">6.5</span><span class="law-desc">Попытка получения взятки должностным лицом</span><span class="law-lvl">6 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 7</span><span class="law-head-title">Охраняемые объекты и временные запреты</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">7.1</span><span class="law-desc">Незаконное проникновение на территорию тюрьмы / военной базы</span><span class="law-lvl">5 ★</span></div>
+      <div class="law-item"><span class="law-art">7.2</span><span class="law-desc">Незаконное проникновение в служебное место</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">7.3</span><span class="law-desc">Незаконное проникновение на охраняемую территорию</span><span class="law-lvl">1 ★</span></div>
+      <div class="law-item"><span class="law-art">7.4</span><span class="law-desc">Создание помехи строю / тренировке / мероприятию</span><span class="law-lvl">2 ★</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 8</span><span class="law-head-title">Невыполнение законных требований</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">8.1</span><span class="law-desc">За невыполнение законных требований сотрудника правоохранительных органов</span><span class="law-lvl">1 ★</span></div>
+    </div>
+  </div></div>
+</div>
+
+<hr class="divider">
+
+<!-- АК -->
+<div class="section" id="ak">
+  <div class="sec-tag">административный кодекс</div>
+  <h2 class="sec-title">Полный АК</h2>
+  <p class="sec-sub">Штрафы и розыск по административным правонарушениям</p>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 1</span><span class="law-head-title">Правонарушения в сфере общественного порядка</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">1.1</span><span class="law-desc">Распитие спиртных напитков в общественных местах</span><span class="law-fine">20 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.2</span><span class="law-desc">Курение в общественных местах и зданиях</span><span class="law-fine">15 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.3</span><span class="law-desc">Нахождение в непристойном виде в общественных местах</span><span class="law-warn">предупр. / 100 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.4</span><span class="law-desc">Громкая музыка после 23:00</span><span class="law-warn">предупр. / 50 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.5</span><span class="law-desc">Блокирование проходов, входов и выходов</span><span class="law-fine">100 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.6</span><span class="law-desc">Агрессивное приставание к гражданам</span><span class="law-fine">100 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">1.7</span><span class="law-desc">Порча государственного имущества намеренно</span><span class="law-fine">100 000 ₽</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 2</span><span class="law-head-title">Оскорбление и неадекватное поведение</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">2.1</span><span class="law-desc">За оскорбление гражданского лица</span><span class="law-lvl">1 ★</span></div>
+      <div class="law-item"><span class="law-art">2.2</span><span class="law-desc">За оскорбление должностного лица</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">2.3</span><span class="law-desc">Систематическое использование нецензурной брани в общественных местах</span><span class="law-fine">50 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">2.4</span><span class="law-desc">Публичные угрозы без факта нападения</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">2.5</span><span class="law-desc">Справление естественных нужд в общественных местах</span><span class="law-fine">50 000 ₽</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 3</span><span class="law-head-title">Проституция</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">3.1</span><span class="law-desc">За занятие проституцией</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">3.2</span><span class="law-desc">За вовлечение в занятие проституцией</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">3.3</span><span class="law-desc">Организация притонов</span><span class="law-lvl">3 ★</span></div>
+      <div class="law-item"><span class="law-art">3.4</span><span class="law-desc">Реклама услуг интимного характера в общественных местах</span><span class="law-fine">200 000 ₽</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 4</span><span class="law-head-title">Ношение предметов, скрывающих лицо</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">4.1</span><span class="law-desc">Ношение маски гражданским лицом</span><span class="law-fine">50 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">4.2</span><span class="law-desc">Ношение маски государственными гражданскими служащими</span><span class="law-fine">100 000 ₽</span></div>
+    </div>
+    <div class="law-note">Под данное правило не попадают все силовые сотрудники в форме</div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 5</span><span class="law-head-title">Нарушения правил дорожного движения</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">5.1</span><span class="law-desc">Превышение установленной скорости движения</span><span class="law-fine">20 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">5.2</span><span class="law-desc">Игнорирование дорожных знаков и разметки</span><span class="law-fine">50 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">5.3</span><span class="law-desc">Движение по встречной полосе</span><span class="law-fine">100 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">5.4</span><span class="law-desc">Оставление ТС в неположенном месте</span><span class="law-fine">35 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">5.5</span><span class="law-desc">Управление ТС без водительского удостоверения</span><span class="law-fine">100 000 ₽</span></div>
+      <div class="law-item"><span class="law-art">5.6</span><span class="law-desc">Управление ТС в состоянии алкогольного / наркотического опьянения</span><span class="law-fine">500 000 ₽</span></div>
+    </div>
+  </div></div>
+
+  <div class="law-block"><div class="law-card">
+    <div class="law-head"><span class="law-head-num">Ст. 6</span><span class="law-head-title">Нарушение политических прав</span></div>
+    <div class="law-items">
+      <div class="law-item"><span class="law-art">6.1</span><span class="law-desc">Нарушение права гражданина на тайну голосования</span><span class="law-lvl">2 ★</span></div>
+      <div class="law-item"><span class="law-art">6.2</span><span class="law-desc">Нарушение агитационного периода</span><span class="law-lvl">1 ★</span></div>
+      <div class="law-item"><span class="law-art">6.3</span><span class="law-desc">Незаконная политическая агитация</span><span class="law-lvl">1 ★</span></div>
+    </div>
+  </div></div>
+</div>
+
+<hr class="divider">
+
+<!-- COMMANDS -->
+<div class="section" id="commands">
+  <div class="sec-tag">команды</div>
+  <h2 class="sec-title">Консольные команды</h2>
+  <p class="sec-sub">Вводятся в чат прямо в игре</p>
+  <div class="commands">
+    <div class="cmd">
+      <div class="cmd-tag">/sw [ID]</div>
+      <div><div class="cmd-name">Открыть интерфейс</div><div class="cmd-desc">Открывает окно выдачи розыска / штрафа для указанного игрока по его ID</div></div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-tag">/swlog</div>
+      <div><div class="cmd-name">Открыть лог</div><div class="cmd-desc">Открывает HTML файл с историей всех выданных розысков и штрафов</div></div>
+    </div>
+    <div class="cmd">
+      <div class="cmd-tag">/swrec</div>
+      <div><div class="cmd-name">Папка с записями</div><div class="cmd-desc">Быстро открывает папку с видеозаписями через Проводник Windows</div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- INSTALL -->
+<div class="section" id="install">
+  <div class="sec-tag">установка</div>
+  <h2 class="sec-title">Как установить</h2>
+  <p class="sec-sub">Следуй шагам ниже — займёт меньше минуты</p>
+
+  <div class="install-steps">
+    <div class="step"><div class="step-num">1</div><div><div class="step-title">Скачать скрипт</div><div class="step-desc">Скачай файл <span class="code">fixedwanted.lua</span> по кнопке ниже</div></div></div>
+    <div class="step"><div class="step-num">2</div><div><div class="step-title">Поместить в папку MoonLoader</div><div class="step-desc">Скопируй файл в <span class="code">GTA San Andreas\moonloader\</span></div></div></div>
+    <div class="step"><div class="step-num">3</div><div><div class="step-title">Настроить пути в скрипте</div><div class="step-desc">Открой .lua файл и укажи свои пути к папке записей и файлу лога в секции <span class="code">-- НАСТРОЙКИ</span></div></div></div>
+    <div class="step"><div class="step-num">4</div><div><div class="step-title">Запустить игру</div><div class="step-desc">Зайди в игру — скрипт загрузится автоматически. В чате появится <span class="code">[FWanted] Скрипт загружен!</span></div></div></div>
+  </div>
+
+  <!-- DOWNLOAD CARD -->
+  <div class="download-card">
+    <div class="dl-icon-wrap">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+        <line x1="12" y1="13" x2="12" y2="18"/>
+        <polyline points="9 16 12 19 15 16"/>
+      </svg>
+    </div>
+    <div class="dl-info">
+      <div class="dl-filename">fixedwanted.lua</div>
+      <div class="dl-meta">
+        <span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Lua · MoonLoader
+        </span>
+        <span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Актуальная версия
+        </span>
+      </div>
+    </div>
+    <a class="dl-btn" href="data:text/plain;base64,c2NyaXB0X25hbWUoImZpeGVkIHdhbnRlZCIpCnNjcmlwdF9hdXRob3IoIll1a2lfS29tb3JpIikKCnJlcXVpcmUgJ2xpYi5tb29ubG9hZGVyJwpsb2NhbCBpbWd1aSA9IHJlcXVpcmUgJ2ltZ3VpJwpsb2NhbCBlbmNvZGluZyA9IHJlcXVpcmUgJ2VuY29kaW5nJwplbmNvZGluZy5kZWZhdWx0ID0gJ0NQMTI1MScKbG9jYWwgdTggPSBlbmNvZGluZy5VVEY4CgotLSA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0gINCd0JDQodCi0KDQntCZ0JrQmAotLSA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KbG9jYWwgUkVDT1JESU5HU19GT0xERVIgPSAiQzpcXFVzZXJzXFwlVVNFUk5BTUUlXFxWaWRlb3NcXERlc2t0b3AiCmxvY2FsIExPR19GSUxFICAgICAgICAgID0gIkQ6XFxHYW1lc1xccm9kaW5hXFxtb29ubG9hZGVyXFx3YW50ZWRfbG9nLmh0bWwiCmxvY2FsIEJBVF9GSUxFICAgICAgICAgID0gIkQ6XFxHYW1lc1xccm9kaW5hXFxtb29ubG9hZGVyXFxvcGVuX2xvZy5iYXQiCi0tID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKbG9jYWwgc2hvd193aW5kb3cgPSBpbWd1aS5JbUJvb2woZmFsc2UpCmxvY2FsIHRhcmdldF9pZCAgID0gMApsb2NhbCB0YXJnZXRfbmljayA9ICIiCmxvY2FsIGFjY2VudCAgICAgID0gaW1ndWkuSW1WZWM0KDE1MC8yNTUsIDAvMjU1LCAyNC8yNTUsIDEuMCkKCmxvY2FsIGZ1bmN0aW9uIG1vc2Nvd190aW1lKCkKICAgIGxvY2FsIHQgPSBvcy5kYXRlKCIhKnQiLCBvcy50aW1lKCkgKyAxMDgwMCkKICAgIHJldHVybiBzdHJpbmcuZm9ybWF0KCIlMDJkOiUwMmQ6JTAyZCIsIHQuaG91ciwgdC5taW4sIHQuc2VjKQplbmQKCmxvY2FsIGZ1bmN0aW9uIG1vc2Nvd19kYXRlKCkKICAgIGxvY2FsIHQgPSBvcy5kYXRlKCIhKnQiLCBvcy50aW1lKCkgKyAxMDgwMCkKICAgIHJldHVybiBzdHJpbmcuZm9ybWF0KCIlMDJkLiUwMmQuJTA0ZCIsIHQuZGF5LCB0Lm1vbnRoLCB0LnllYXIpCmVuZAoKbG9jYWwgSFRNTF9IRUFEID0gW1s8IURPQ1RZUEUgaHRtbD4KPGh0bWwgbGFuZz0icnUiPgo8aGVhZD4KPG1ldGEgY2hhcnNldD0iVVRGLTgiPgo8dGl0bGU+V2FudGVkIExvZzwvdGl0bGU+CjxzdHlsZT4KICBib2R5e2JhY2tncm91bmQ6IzBkMGQwZjtjb2xvcjojZTBlMGUwO2ZvbnQtZmFtaWx5OidTZWdvZSBVSScsc2Fucy1zZXJpZjtwYWRkaW5nOjI0cHg7bWFyZ2luOjB9CiAgaDJ7Y29sb3I6Izk2MDAxODttYXJnaW4tYm90dG9tOjE2cHg7bGV0dGVyLXNwYWNpbmc6MnB4O3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KICB0YWJsZXt3aWR0aDoxMDAlO2JvcmRlci1jb2xsYXBzZTpjb2xsYXBzZTtmb250LXNpemU6MTNweH0KICB0aGVhZCB0cntiYWNrZ3JvdW5kOiMxYTFhMWM7Y29sb3I6Izk2MDAxODt0ZXh0LXRyYW5zZm9ybTp1cHBlcmNhc2U7bGV0dGVyLXNwYWNpbmc6MXB4fQogIHRoLHRke3BhZGRpbmc6MTBweCAxNHB4O2JvcmRlci1ib3R0b206MXB4IHNvbGlkICMyMjI7dGV4dC1hbGlnbjpsZWZ0fQogIHRib2R5IHRyOmhvdmVye2JhY2tncm91bmQ6IzE2MTYxOH0KICAuYmFkZ2UtdWt7YmFja2dyb3VuZDojOTYwMDE4O2NvbG9yOiNmZmY7cGFkZGluZzoycHggOHB4O2JvcmRlci1yYWRpdXM6NHB4O2ZvbnQtc2l6ZToxMXB4fQogIC5iYWRnZS1hcHtiYWNrZ3JvdW5kOiMxYTRkN2E7Y29sb3I6I2ZmZjtwYWRkaW5nOjJweCA4cHg7Ym9yZGVyLXJhZGl1czo0cHg7Zm9udC1zaXplOjExcHh9CiAgLnN0YXJze2NvbG9yOiNmMGMwNDB9CiAgYXtjb2xvcjojNGE5ZWZmO3RleHQtZGVjb3JhdGlvbjpub25lfQogIGE6aG92ZXJ7dGV4dC1kZWNvcmF0aW9uOnVuZGVybGluZX0KICAudGltZXtjb2xvcjojODg4O2ZvbnQtc2l6ZToxMnB4fQo8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5Pgo8aDI+JiM5ODg4OyBXYW50ZWQgTG9nPC9oMj4KPHRhYmxlPgo8dGhlYWQ+PHRyPjx0aD4jPC90aD48dGg+0JTQsNGC0LAgLyDQktGA0LXQvNGPICjQnNCh0JopPC90aD48dGg+0JjQs9GA0L7QujwvdGg+PHRoPtCi0LjQvzwvdGg+PHRoPtCh0YLQsNGC0YzRjzwvdGg+PHRoPtCc0LXRgNCwPC90aD48dGg+0JfQsNC/0LjRgdGMPC90aD48L3RyPjwvdGhlYWQ+Cjx0Ym9keT4KXV0KbG9jYWwgSFRNTF9GT09UID0gW1s8L3Rib2R5PjwvdGFibGU+PC9ib2R5PjwvaHRtbD5dXQoKbG9jYWwgbG9nX3Jvd19jb3VudCA9IDAKCmxvY2FsIGZ1bmN0aW9uIGluaXRfbG9nKCkKICAgIGxvY2FsIGNoZWNrID0gaW8ub3BlbihMT0dfRklMRSwgInIiKQogICAgaWYgY2hlY2sgdGhlbgogICAgICAgIGxvY2FsIGNvbnRlbnQgPSBjaGVjazpyZWFkKCIqYSIpCiAgICAgICAgY2hlY2s6Y2xvc2UoKQogICAgICAgIGZvciBfIGluIGNvbnRlbnQ6Z21hdGNoKCI8dHI+IikgZG8KICAgICAgICAgICAgbG9nX3Jvd19jb3VudCA9IGxvZ19yb3dfY291bnQgKyAxCiAgICAgICAgZW5kCiAgICAgICAgcmV0dXJuIHRydWUKICAgIGVuZAogICAgbG9jYWwgZiA9IGlvLm9wZW4oTE9HX0ZJTEUsICJ3IikKICAgIGlmIGYgdGhlbgogICAgICAgIGY6d3JpdGUoSFRNTF9IRUFEKQogICAgICAgIGY6d3JpdGUoSFRNTF9GT09UKQogICAgICAgIGY6Y2xvc2UoKQogICAgICAgIHJldHVybiB0cnVlCiAgICBlbmQKICAgIHJldHVybiBmYWxzZQplbmQKCmxvY2FsIGZ1bmN0aW9uIHdyaXRlX2xvZyhuaWNrLCBhcnRpY2xlLCBsYXdfdHlwZSwgbGV2ZWxfb3Jfc3VtbWEpCiAgICBsb2NhbCBkYXRlID0gbW9zY293X2RhdGUoKQogICAgbG9jYWwgdGltZSA9IG1vc2Nvd190aW1lKCkKICAgIGxvY2FsIHJlY19mb2xkZXIgPSBSRUNPUkRJTkdTX0ZPTERFUjpnc3ViKCIlJVVTRVJOQU1FJSUiLCBvcy5nZXRlbnYoIlVTRVJOQU1FIikgb3IgIlVzZXIiKQogICAgbG9nX3Jvd19jb3VudCA9IGxvZ19yb3dfY291bnQgKyAxCiAgICBsb2NhbCBiYWRnZSwgbWVhc3VyZQogICAgaWYgbGF3X3R5cGUgPT0gItCj0JoiIHRoZW4KICAgICAgICBiYWRnZSAgID0gJzxzcGFuIGNsYXNzPSJiYWRnZS11ayI+0KPQmjwvc3Bhbj4nCiAgICAgICAgbWVhc3VyZSA9ICc8c3BhbiBjbGFzcz0ic3RhcnMiPicgLi4gc3RyaW5nLnJlcCgiJiM5NzMzOyIsIGxldmVsX29yX3N1bW1hKSAuLiAnPC9zcGFuPiAnIC4uIGxldmVsX29yX3N1bW1hCiAgICBlbHNlCiAgICAgICAgYmFkZ2UgICA9ICc8c3BhbiBjbGFzcz0iYmFkZ2UtYXAiPtCa0L7QkNCfPC9zcGFuPicKICAgICAgICBtZWFzdXJlID0gbGV2ZWxfb3Jfc3VtbWEgLi4gJyDRgNGD0LEuJwogICAgZW5kCiAgICBsb2NhbCByb3cgPSBzdHJpbmcuZm9ybWF0KAogICAgICAgICc8dHI+PHRkPiVkPC90ZD48dGQ+PHNwYW4gY2xhc3M9InRpbWUiPiVzICVzPC9zcGFuPjwvdGQ+PHRkPjxiPiVzPC9iPjwvdGQ+PHRkPiVzPC90ZD48dGQ+JXM8L3RkPjx0ZD4lczwvdGQ+PHRkPjxhIGhyZWY9ImZpbGU6Ly8vJXMiPiYjMTI4MjQ5OyDQvtGC0LrRgNGL0YLRjDwvYT48L3RkPjwvdHI+XG4nLAogICAgICAgIGxvZ19yb3dfY291bnQsIGRhdGUsIHRpbWUsIG5pY2ssIGJhZGdlLCBhcnRpY2xlLCBtZWFzdXJlLAogICAgICAgIHJlY19mb2xkZXI6Z3N1YigiXFwiLCAiLyIpCiAgICApCiAgICBsb2NhbCBmID0gaW8ub3BlbihMT0dfRklMRSwgInIiKQogICAgaWYgbm90IGYgdGhlbiByZXR1cm4gZW5kCiAgICBsb2NhbCBjb250ZW50ID0gZjpyZWFkKCIqYSIpCiAgICBmOmNsb3NlKCkKICAgIGNvbnRlbnQgPSBjb250ZW50OmdzdWIoIjwvdGJvZHk+Iiwgcm93IC4uICI8L3Rib2R5PiIsIDEpCiAgICBsb2NhbCBmdyA9IGlvLm9wZW4oTE9HX0ZJTEUsICJ3IikKICAgIGlmIGZ3IHRoZW4KICAgICAgICBmdzp3cml0ZShjb250ZW50KQogICAgICAgIGZ3OmNsb3NlKCkKICAgIGVuZAogICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0xPR10gIiAuLiBkYXRlIC4uICIgIiAuLiB0aW1lIC4uICIgfCAiIC4uIG5pY2sgLi4gIiB8ICIgLi4gYXJ0aWNsZSAuLiAiICIgLi4gbGF3X3R5cGUpLCAweEZGQUEwMCkKZW5kCgpsb2NhbCBmdW5jdGlvbiBnZXRfbmljayhpZCkKICAgIGxvY2FsIG9rLCBuaWNrID0gcGNhbGwoc2FtcEdldFBsYXllck5pY2tuYW1lLCBpZCkKICAgIGlmIG9rIGFuZCBuaWNrIHRoZW4gcmV0dXJuIG5pY2sgZW5kCiAgICByZXR1cm4gIklEXyIgLi4gdG9zdHJpbmcoaWQpCmVuZAoKbG9jYWwgZnVuY3Rpb24gb3Blbl9sb2coKQogICAgb3MuZXhlY3V0ZSgnIicgLi4gQkFUX0ZJTEUgLi4gJyInKQplbmQKCmxvY2FsIGFydGljbGVfc2VjdGlvbnMgPSB7CiAgICB7CiAgICAgICAgbmFtZSA9ICLQodGC0LDRgtGM0Y8gMS4g0J/RgNC40YfQuNC90LXQvdC40LUg0LLRgNC10LTQsCDQt9C00L7RgNC+0LLRjNGOINGH0LXQu9C+0LLQtdC60LAuIiwKICAgICAgICBpdGVtcyA9IHsKICAgICAgICAgICAge2FydGljbGU9IjEuMSIsIGRlc2M9ItCR0LXQt9C+0YDRg9C20L3QvtC1INC90LDQv9Cw0LTQtdC90LjQtSIsICBsZXZlbD0zfSwKICAgICAgICAgICAge2FydGljbGU9IjEuMiIsIGRlc2M9ItCS0L7QvtGA0YPQttC10L3QvdC+0LUg0L3QsNC/0LDQtNC10L3QuNC1IiwgbGV2ZWw9NH0sCiAgICAgICAgICAgIHthcnRpY2xlPSIxLjMiLCBkZXNjPSLQn9C+0YXQuNGJ0LXQvdC40LUiLCAgICAgICAgICAgICBsZXZlbD01fSwKICAgICAgICAgICAge2FydGljbGU9IjEuNCIsIGRlc2M9ItCj0LHQuNC50YHRgtCy0L4iLCAgICAgICAgICAgICAgbGV2ZWw9Nn0KICAgICAgICB9CiAgICB9LAogICAgewogICAgICAgIG5hbWUgPSAi0KHRgtCw0YLRjNGPIDIuINCe0YDRg9C20LjQtSDQuCDRgNCw0LfQu9C40YfQvdC+0LUg0YHQvdCw0YDRj9C20LXQvdC40LUuIiwKICAgICAgICBpdGVtcyA9IHsKICAgICAgICAgICAge2FydGljbGU9IjIuMSIsIGRlc2M9ItCd0L7RiNC10L3QuNC1INC+0YDRg9C20LjRjyDQsiDQsdC+0LXQstC+0Lkg0LPQvtGC0L7QstC90L7RgdGC0LgiLCAgbGV2ZWw9M30sCiAgICAgICAgICAgIHthcnRpY2xlPSIyLjIiLCBkZXNjPSLQndC10LfQsNC60L7QvdC90L7QtSDQuNC30LPQvtGC0L7QstC70LXQvdC40LUg0L7RgNGD0LbQuNGPIiwgICAgICAgbGV2ZWw9M30sCiAgICAgICAgICAgIHthcnRpY2xlPSIyLjMiLCBkZXNjPSLQndC10LfQsNC60L7QvdC90L7QtSDRhdGA0LDQvdC10L3QuNC1INC+0YDRg9C20LjRjyIsICAgICAgICAgICBsZXZlbD0zfSwKICAgICAgICAgICAge2FydGljbGU9IjIuNCIsIGRlc2M9ItCf0YDQvtC00LDQttCwINC/0LDRgtGA0L7QvdC+0LIsINC+0YDRg9C20LjRjyIsICAgICAgICAgICAgIGxldmVsPTR9CiAgICAgICAgfQogICAgfSwKICAgIHsKICAgICAgICBuYW1lID0gItCh0YLQsNGC0YzRjyAzLiDQndCw0YDQutC+0YLQuNC60LgsINC/0YHQuNGF0L7RgtGA0L7Qv9C90YvQtSDQstC10YnQtdGB0YLQstCwLiIsCiAgICAgICAgaXRlbXMgPSB7CiAgICAgICAgICAgIHthcnRpY2xlPSIzLjEiLCBkZXNjPSLQpdGA0LDQvdC10L3QuNC1INC90LDRgNC60L7RgtC40YfQtdGB0LrQuNGFINCy0LXRidC10YHRgtCyIiwgIGxldmVsPTV9LAogICAgICAgICAgICB7YXJ0aWNsZT0iMy4yIiwgZGVzYz0i0J/RgNC+0LTQsNC20LAg0L3QsNGA0LrQvtGC0LjRh9C10YHQutC40YUg0LLQtdGJ0LXRgdGC0LIiLCAgIGxldmVsPTZ9LAogICAgICAgICAgICB7YXJ0aWNsZT0iMy4zIiwgZGVzYz0i0J/RgNC40L7QsdGA0LXRgtC10L3QuNC1L9GD0L/QvtGC0YDQtdCx0LvQtdC90LjQtSIsICAgICAgICBsZXZlbD0xfSwKICAgICAgICAgICAge2FydGljbGU9IjMuNCIsIGRlc2M9ItCh0LHRi9GCINCyINC+0YHQvtCx0L4g0LrRgNGD0L/QvdC+0Lwg0YDQsNC30LzQtdGA0LUiLCAgICAgbGV2ZWw9Nn0KICAgICAgICB9CiAgICB9LAogICAgewogICAgICAgIG5hbWUgPSAi0KHRgtCw0YLRjNGPIDQuINCR0LDQvdC00LjRgtC40LfQvC4iLAogICAgICAgIGl0ZW1zID0gewogICAgICAgICAgICB7YXJ0aWNsZT0iNC4xIiwgZGVzYz0i0JLRi9C00LDRh9CwINGB0LXQsdGPINC30LAg0YHQvtGC0YDRg9C00L3QuNC60LAiLCAgICAgICBsZXZlbD0yfSwKICAgICAgICAgICAge2FydGljbGU9IjQuMiIsIGRlc2M9ItCf0YDQtdC/0Y/RgtGB0YLQstC40LUg0LTQstC40LbQtdC90LjRjiDQutC+0YDRgtC10LbQsCIsICAgIGxldmVsPTJ9LAogICAgICAgICAgICB7YXJ0aWNsZT0iNC4zIiwgZGVzYz0i0J3QsNC/0LDQtNC10L3QuNC1INC90LAg0LrQvtGA0YLQtdC2L9C60L7QvdCy0L7QuSIsICAgICAgbGV2ZWw9Nn0sCiAgICAgICAgICAgIHthcnRpY2xlPSI0LjQiLCBkZXNjPSLQn9GA0LXRgdC70LXQtNC+0LLQsNC90LjQtSDRgdC70YPQttC10LHQvdC+0LPQviDQsNCy0YLQviIsICAgbGV2ZWw9M30sCiAgICAgICAgICAgIHthcnRpY2xlPSI0LjUiLCBkZXNjPSLQo9Cz0L7QvSDRgtGA0LDQvdGB0L/QvtGA0YLQsCIsICAgICAgICAgICAgICAgICAgbGV2ZWw9M30sCiAgICAgICAgICAgIHthcnRpY2xlPSI0LjYiLCBkZXNjPSLQn9C+0L/Ri9GC0LrQsCDRg9Cz0L7QvdCwINCi0KEiLCAgICAgICAgICAgICAgICAgbGV2ZWw9Mn0sCiAgICAgICAgICAgIHthcnRpY2xlPSI0LjciLCBkZXNjPSLQqNCw0L3RgtCw0LYv0LLRi9C80L7Qs9Cw0YLQtdC70YzRgdGC0LLQviIsICAgICAgICAgICBsZXZlbD00fSwKICAgICAgICAgICAge2FydGljbGU9IjQuOCIsIGRlc2M9ItCe0LPRgNCw0LHQu9C10L3QuNC1INCz0YDQsNC20LTQsNC9IiwgICAgICAgICAgICAgIGxldmVsPTN9CiAgICAgICAgfQogICAgfSwKICAgIHsKICAgICAgICBuYW1lID0gItCh0YLQsNGC0YzRjyA1LiDQotC10YDRgNC+0YDQuNC30LwuIiwKICAgICAgICBpdGVtcyA9IHsKICAgICAgICAgICAge2FydGljbGU9IjUuMSIsIGRlc2M9ItCX0LDRhdCy0LDRgiDQs9C+0YEuINGD0YfRgNC10LbQtNC10L3QuNC5IiwgbGV2ZWw9Nn0sCiAgICAgICAgICAgIHthcnRpY2xlPSI1LjIiLCBkZXNjPSLQl9Cw0YXQstCw0YIg0LfQsNC70L7QttC90LjQutC+0LIiLCAgICAgICBsZXZlbD02fQogICAgICAgIH0KICAgIH0sCiAgICB7CiAgICAgICAgbmFtZSA9ICLQodGC0LDRgtGM0Y8gNi4g0JrQvtGA0YDRg9C/0YbQuNGPLiIsCiAgICAgICAgaXRlbXMgPSB7CiAgICAgICAgICAgIHthcnRpY2xlPSI2LjEiLCBkZXNjPSLQlNCw0YfQsCDQstC30Y/RgtC60LgiLCAgICAgICAgICAgICAgICAgbGV2ZWw9Nn0sCiAgICAgICAgICAgIHthcnRpY2xlPSI2LjIiLCBkZXNjPSLQn9GA0LjQvdGP0YLQuNC1INCy0LfRj9GC0LrQuCIsICAgICAgICAgICAgIGxldmVsPTZ9LAogICAgICAgICAgICB7YXJ0aWNsZT0iNi4zIiwgZGVzYz0i0JLRi9C80L7Qs9Cw0YLQtdC70YzRgdGC0LLQviDQtNC+0LvQttC90L7RgdGC0L3Ri9C8IiwgIGxldmVsPTZ9LAogICAgICAgICAgICB7YXJ0aWNsZT0iNi40IiwgZGVzYz0i0J/QvtC/0YvRgtC60LAg0LTQsNGH0Lgg0LLQt9GP0YLQutC4IiwgICAgICAgICBsZXZlbD00fSwKICAgICAgICAgICAge2FydGljbGU9IjYuNSIsIGRlc2M9ItCf0L7Qv9GL0YLQutCwINC/0L7Qu9GD0YfQtdC90LjRjyDQstC30Y/RgtC60LgiLCAgICBsZXZlbD02fQogICAgICAgIH0KICAgIH0sCiAgICB7CiAgICAgICAgbmFtZSA9ICLQodGC0LDRgtGM0Y8gNy4g0J7RhdGA0LDQvdGP0LXQvNGL0LUg0L7QsdGK0LXQutGC0Ysg0Lgg0LLRgNC10LzQtdC90L3Ri9C1INC30LDQv9GA0LXRgtGLLiIsCiAgICAgICAgaXRlbXMgPSB7CiAgICAgICAgICAgIHthcnRpY2xlPSI3LjEiLCBkZXNjPSLQn9GA0L7QvdC40LrQvdC+0LLQtdC90LjQtSDQsiDRgtGO0YDRjNC80YMv0LHQsNC30YMiLCAgICAgICAgICAgbGV2ZWw9NX0sCiAgICAgICAgICAgIHthcnRpY2xlPSI3LjIiLCBkZXNjPSLQn9GA0L7QvdC40LrQvdC+0LLQtdC90LjQtSDQsiDRgdC70YPQttC10LHQvdC+0LUg0LzQtdGB0YLQviIsICAgICAgICBsZXZlbD0yfSwKICAgICAgICAgICAge2FydGljbGU9IjcuMyIsIGRlc2M9ItCf0YDQvtC90LjQutC90L7QstC10L3QuNC1INC90LAg0L7RhdGA0LDQvdGP0LXQvNGD0Y4g0YLQtdGA0YDQuNGC0L7RgNC40Y4iLCBsZXZlbD0xfSwKICAgICAgICAgICAge2FydGljbGU9IjcuNCIsIGRlc2M9ItCf0L7QvNC10YXQsCDRgdGC0YDQvtGOL9C80LXRgNC+0L/RgNC40Y/RgtC40Y4iLCAgICAgICAgICAgICAgIGxldmVsPTJ9CiAgICAgICAgfQogICAgfSwKICAgIHsKICAgICAgICBuYW1lID0gItCh0YLQsNGC0YzRjyA4LiDQndC1INCy0YvQv9C+0LvQvdC10L3QuNC1INC30LDQutC+0L3QvdGL0YUg0YLRgNC10LHQvtCy0LDQvdC40LkuIiwKICAgICAgICBpdGVtcyA9IHsKICAgICAgICAgICAge2FydGljbGU9IjguMSIsIGRlc2M9ItCd0LXQstGL0L/QvtC70L3QtdC90LjQtSDRgtGA0LXQsdC+0LLQsNC90LjQuSIsIGxldmVsPTF9CiAgICAgICAgfQogICAgfQp9Cgpsb2NhbCBha19zZWN0aW9ucyA9IHsKICAgIFsxXSA9IHsKICAgICAgICB7YXJ0aWNsZT0iMS4xIiwgZGVzYz0i0KDQsNGB0L/QuNGC0LjQtSDRgdC/0LjRgNGC0L3Ri9GFINC90LDQv9C40YLQutC+0LIiLCAgICBzdW1tYT0yMDAwMH0sCiAgICAgICAge2FydGljbGU9IjEuMiIsIGRlc2M9ItCa0YPRgNC10L3QuNC1INCyINC+0LHRidC10YHRgtCy0LXQvdC90YvRhSDQvNC10YHRgtCw0YUiLCBzdW1tYT0xNTAwMH0sCiAgICAgICAge2FydGljbGU9IjEuMyIsIGRlc2M9ItCd0LDRhdC+0LbQtNC10L3QuNC1INCyINC90LXQv9GA0LjRgdGC0L7QudC90L7QvCDQstC40LTQtSIsc3VtbWE9MTAwMDAwfSwKICAgICAgICB7YXJ0aWNsZT0iMS40IiwgZGVzYz0i0JPRgNC+0LzQutCw0Y8g0LzRg9C30YvQutCwINC/0L7RgdC70LUgMjM6MDAiLCAgICBzdW1tYT01MDAwMH0sCiAgICAgICAge2FydGljbGU9IjEuNSIsIGRlc2M9ItCR0LvQvtC60LjRgNC+0LLQsNC90LjQtSDQv9GA0L7RhdC+0LTQvtCyIiwgICAgICAgICAgc3VtbWE9MTAwMDAwfSwKICAgICAgICB7YXJ0aWNsZT0iMS42IiwgZGVzYz0i0JDQs9GA0LXRgdGB0LjQstC90L7QtSDQv9GA0LjRgdGC0LDQstCw0L3QuNC1IiwgICAgICAgIHN1bW1hPTEwMDAwMH0sCiAgICAgICAge2FydGljbGU9IjEuNyIsIGRlc2M9ItCf0L7RgNGH0LAg0LPQvtGBLiDQuNC80YPRidC10YHRgtCy0LAiLCAgICAgICAgICAgc3VtbWE9MTAwMDAwfQogICAgfSwKICAgIFsyXSA9IHsKICAgICAgICB7YXJ0aWNsZT0iMi4zIiwgZGVzYz0i0JjRgdC/0L7Qu9GM0LfQvtCy0LDQvdC40LUg0L3QtdGG0LXQvdC30YPRgNC90L7QuSDQsdGA0LDQvdC4Iiwgc3VtbWE9NTAwMDB9LAogICAgICAgIHthcnRpY2xlPSIyLjUiLCBkZXNjPSLQodC/0YDQsNCy0LvQtdC90LjQtSDQtdGB0YLQtdGB0YLQstC10L3QvdGL0YUg0L3Rg9C20LQiLCAgICBzdW1tYT01MDAwMH0KICAgIH0sCiAgICBbM10gPSB7CiAgICAgICAge2FydGljbGU9IjMuNCIsIGRlc2M9ItCg0LXQutC70LDQvNCwINC40L3RgtC40LzQvdGL0YUg0YPRgdC70YPQsyIsIHN1bW1hPTIwMDAwMH0KICAgIH0sCiAgICBbNF0gPSB7CiAgICAgICAge2FydGljbGU9IjQuMSIsIGRlc2M9ItCd0L7RiNC10L3QuNC1INC80LDRgdC60Lgg0LPRgNCw0LbQtNCw0L3RgdC60LjQvNC4IiwgICBzdW1tYT01MDAwMH0sCiAgICAgICAge2FydGljbGU9IjQuMiIsIGRlc2M9ItCd0L7RiNC10L3QuNC1INC80LDRgdC60Lgg0LPQvtGBLiDRgdC70YPQttCw0YnQuNC80LgiLCBzdW1tYT0xMDAwMDB9CiAgICB9LAogICAgWzVdID0gewogICAgICAgIHthcnRpY2xlPSI1LjEiLCBkZXNjPSLQn9GA0LXQstGL0YjQtdC90LjQtSDRgdC60L7RgNC+0YHRgtC4IiwgICAgICAgICAgICAgICAgIHN1bW1hPTIwMDAwfSwKICAgICAgICB7YXJ0aWNsZT0iNS4yIiwgZGVzYz0i0JjQs9C90L7RgNC40YDQvtCy0LDQvdC40LUg0LfQvdCw0LrQvtCyINC4INGA0LDQt9C80LXRgtC60LgiLCAgICAgc3VtbWE9NTAwMDB9LAogICAgICAgIHthcnRpY2xlPSI1LjMiLCBkZXNjPSLQlNCy0LjQttC10L3QuNC1INC/0L4g0LLRgdGC0YDQtdGH0L3QvtC5INC/0L7Qu9C+0YHQtSIsICAgICAgICAgc3VtbWE9MTAwMDAwfSwKICAgICAgICB7YXJ0aWNsZT0iNS40IiwgZGVzYz0i0J7RgdGC0LDQstC70LXQvdC40LUg0KLQoSDQsiDQvdC10L/QvtC70L7QttC10L3QvdC+0Lwg0LzQtdGB0YLQtSIsICAgc3VtbWE9MzUwMDB9LAogICAgICAgIHthcnRpY2xlPSI1LjUiLCBkZXNjPSLQo9C/0YDQsNCy0LvQtdC90LjQtSDQsdC10Lcg0L/RgNCw0LIiLCAgICAgICAgICAgICAgICAgIHN1bW1hPTEwMDAwMH0sCiAgICAgICAge2FydGljbGU9IjUuNiIsIGRlc2M9ItCj0L/RgNCw0LLQu9C10L3QuNC1INCyINC/0YzRj9C90L7QvCDQstC40LTQtSIsICAgICAgICAgICAgIHN1bW1hPTUwMDAwMH0KICAgIH0KfQoKbG9jYWwgYWtfc2VjdGlvbl9uYW1lcyA9IHsKICAgIFsxXSA9ICLQn9GA0LDQstC+0L3QsNGA0YPRiNC10L3QuNGPINCyINGB0YTQtdGA0LUg0L7QsdGJ0LXRgdGC0LLQtdC90L3QvtCz0L4g0L/QvtGA0Y/QtNC60LAiLAogICAgWzJdID0gItCe0YHQutC+0YDQsdC70LXQvdC40Y8g0Lgg0L3QtdCw0LTQtdC60LLQsNGC0L3QvtC1INC/0L7QstC10LTQtdC90LjQtSIsCiAgICBbM10gPSAi0J/RgNC+0YHRgtC40YLRg9GG0LjRjyDQuCDQuNC90YLQuNC80L3Ri9C1INC90LDRgNGD0YjQtdC90LjRjyIsCiAgICBbNF0gPSAi0J3QvtGI0LXQvdC40LUg0LzQsNGB0L7QuiDQuCDRgdC60YDRi9Cy0LDRjtGJ0LjRhSDQv9GA0LXQtNC80LXRgtC+0LIiLAogICAgWzVdID0gItCd0LDRgNGD0YjQtdC90LjRjyDQv9GA0LDQstC40Lsg0LTQvtGA0L7QttC90L7Qs9C+INC00LLQuNC20LXQvdC40Y8iCn0KCmZ1bmN0aW9uIG1haW4oKQogICAgcmVwZWF0IHdhaXQoMCkgdW50aWwgaXNTYW1wQXZhaWxhYmxlKCkKCiAgICBpZiBub3Qgc2FtcFNlbmRDaGF0IHRoZW4KICAgICAgICBzYW1wQWRkQ2hhdE1lc3NhZ2UodTg6ZGVjb2RlKCJbRldhbnRlZF0g0J7QqNCY0JHQmtCQOiBzYW1wU2VuZENoYXQg0L3QtSDQvdCw0LnQtNC10L0hIiksIDB4RkYwMDAwKQogICAgICAgIHJldHVybgogICAgZW5kCgogICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCh0LrRgNC40L/RgiDQt9Cw0LPRgNGD0LbQtdC9ISDQmtC+0LzQsNC90LTQsDogL3N3IDxJRD4iKSwgMHgwMEZGMDApCgogICAgaWYgaW5pdF9sb2coKSB0aGVuCiAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCb0L7QsyDQs9C+0YLQvtCyISIpLCAweDAwRkYwMCkKICAgIGVsc2UKICAgICAgICBzYW1wQWRkQ2hhdE1lc3NhZ2UodTg6ZGVjb2RlKCJbRldhbnRlZF0g0J7QqNCY0JHQmtCQINC70L7Qs9CwISIpLCAweEZGMDAwMCkKICAgIGVuZAoKICAgIHNhbXBSZWdpc3RlckNoYXRDb21tYW5kKCJzdyIsIGZ1bmN0aW9uKGFyZykKICAgICAgICBsb2NhbCBpZCA9IHRvbnVtYmVyKGFyZykKICAgICAgICBpZiBpZCB0aGVuCiAgICAgICAgICAgIHRhcmdldF9pZCAgID0gaWQKICAgICAgICAgICAgdGFyZ2V0X25pY2sgPSBnZXRfbmljayhpZCkKICAgICAgICAgICAgc2hvd193aW5kb3cudiA9IHRydWUKICAgICAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCe0LrQvdC+INC+0YLQutGA0YvRgtC+INC00LvRjyBJRDogIiAuLiBpZCAuLiAiICgiIC4uIHRhcmdldF9uaWNrIC4uICIpIiksIDB4MDBGRjAwKQogICAgICAgIGVsc2UKICAgICAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCY0YHQv9C+0LvRjNC30YPQuTogL3N3IFtJRCDQuNCz0YDQvtC60LBdIiksIC0xKQogICAgICAgIGVuZAogICAgZW5kKQoKICAgIHNhbXBSZWdpc3RlckNoYXRDb21tYW5kKCJzd2xvZyIsIGZ1bmN0aW9uKCkKICAgICAgICBvcGVuX2xvZygpCiAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCe0YLQutGA0YvQstCw0Y4g0LvQvtCzLi4uIiksIDB4MDBBQUZGKQogICAgZW5kKQoKICAgIHNhbXBSZWdpc3RlckNoYXRDb21tYW5kKCJzd3JlYyIsIGZ1bmN0aW9uKCkKICAgICAgICBsb2NhbCByZWNfZm9sZGVyID0gUkVDT1JESU5HU19GT0xERVI6Z3N1YigiJSVVU0VSTkFNRSUlIiwgb3MuZ2V0ZW52KCJVU0VSTkFNRSIpIG9yICJVc2VyIikKICAgICAgICBvcy5leGVjdXRlKCdjbWQgL2Mgc3RhcnQgIiIgIicgLi4gcmVjX2ZvbGRlciAuLiAnIicpCiAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCe0YLQutGA0YvQstCw0Y4g0L/QsNC/0LrRgyDRgSDQt9Cw0L/QuNGB0Y/QvNC4Li4uIiksIDB4MDBBQUZGKQogICAgZW5kKQoKICAgIHdoaWxlIHRydWUgZG8KICAgICAgICB3YWl0KDApCiAgICAgICAgaW1ndWkuUHJvY2VzcyA9IHNob3dfd2luZG93LnYKICAgIGVuZAplbmQKCmZ1bmN0aW9uIGltZ3VpLk9uRHJhd0ZyYW1lKCkKICAgIGlmIG5vdCBzaG93X3dpbmRvdy52IHRoZW4gcmV0dXJuIGVuZAoKICAgIGltZ3VpLlB1c2hTdHlsZUNvbG9yKGltZ3VpLkNvbC5XaW5kb3dCZywgICAgICAgICAgICAgaW1ndWkuSW1WZWM0KDAuMDksMC4wOSwwLjEwLDEpKQogICAgaW1ndWkuUHVzaFN0eWxlQ29sb3IoaW1ndWkuQ29sLlRpdGxlQmcsICAgICAgICAgICAgICBpbWd1aS5JbVZlYzQoMC4xMiwwLjEyLDAuMTMsMSkpCiAgICBpbWd1aS5QdXNoU3R5bGVDb2xvcihpbWd1aS5Db2wuVGl0bGVCZ0FjdGl2ZSwgICAgICAgIGltZ3VpLkltVmVjNCgwLjE1LDAuMTUsMC4xNywxKSkKICAgIGltZ3VpLlB1c2hTdHlsZUNvbG9yKGltZ3VpLkNvbC5CdXR0b24sICAgICAgICAgICAgICAgaW1ndWkuSW1WZWM0KDAuMTgsMC4xOCwwLjIwLDEpKQogICAgaW1ndWkuUHVzaFN0eWxlQ29sb3IoaW1ndWkuQ29sLkJ1dHRvbkhvdmVyZWQsICAgICAgICBhY2NlbnQpCiAgICBpbWd1aS5QdXNoU3R5bGVDb2xvcihpbWd1aS5Db2wuQnV0dG9uQWN0aXZlLCAgICAgICAgIGFjY2VudCkKICAgIGltZ3VpLlB1c2hTdHlsZUNvbG9yKGltZ3VpLkNvbC5IZWFkZXIsICAgICAgICAgICAgICAgaW1ndWkuSW1WZWM0KDAuMjIsMC4yMiwwLjI0LDEpKQogICAgaW1ndWkuUHVzaFN0eWxlQ29sb3IoaW1ndWkuQ29sLkhlYWRlckhvdmVyZWQsICAgICAgICBpbWd1aS5JbVZlYzQoMC4yOCwwLjI4LDAuMzAsMSkpCiAgICBpbWd1aS5QdXNoU3R5bGVDb2xvcihpbWd1aS5Db2wuSGVhZGVyQWN0aXZlLCAgICAgICAgIGltZ3VpLkltVmVjNCgwLjIwLDAuMjAsMC4yMiwxKSkKICAgIGltZ3VpLlB1c2hTdHlsZUNvbG9yKGltZ3VpLkNvbC5TY3JvbGxiYXJCZywgICAgICAgICAgaW1ndWkuSW1WZWM0KDAuMTIsMC4xMiwwLjEzLDEpKQogICAgaW1ndWkuUHVzaFN0eWxlQ29sb3IoaW1ndWkuQ29sLlNjcm9sbGJhckdyYWIsICAgICAgICBpbWd1aS5JbVZlYzQoMC4yNSwwLjI1LDAuMjcsMSkpCiAgICBpbWd1aS5QdXNoU3R5bGVDb2xvcihpbWd1aS5Db2wuU2Nyb2xsYmFyR3JhYkhvdmVyZWQsIGltZ3VpLkltVmVjNCgwLjM1LDAuMzUsMC4zNywxKSkKICAgIGltZ3VpLlB1c2hTdHlsZUNvbG9yKGltZ3VpLkNvbC5TY3JvbGxiYXJHcmFiQWN0aXZlLCAgaW1ndWkuSW1WZWM0KDAuNDUsMC40NSwwLjQ3LDEpKQogICAgaW1ndWkuUHVzaFN0eWxlVmFyKGltZ3VpLlN0eWxlVmFyLkZyYW1lUm91bmRpbmcsIDYpCiAgICBpbWd1aS5QdXNoU3R5bGVWYXIoaW1ndWkuU3R5bGVWYXIuV2luZG93Um91bmRpbmcsIDgpCgogICAgaW1ndWkuU2V0TmV4dFdpbmRvd1NpemUoaW1ndWkuSW1WZWMyKDQ5MCwgNDYwKSwgaW1ndWkuQ29uZC5GaXJzdFVzZUV2ZXIpCiAgICBpbWd1aS5CZWdpbigiU1UgSGVscGVyIiwgc2hvd193aW5kb3cpCgogICAgaW1ndWkuVGV4dENvbG9yZWQoaW1ndWkuSW1WZWM0KDEsMC44LDAuMiwxKSwgItCY0LPRgNC+0Lo6ICIgLi4gdGFyZ2V0X25pY2sgLi4gIiAgKElEICIgLi4gdG9zdHJpbmcodGFyZ2V0X2lkKSAuLiAiKSIpCiAgICBpbWd1aS5TZXBhcmF0b3IoKQoKICAgIGxvY2FsIHdpbmRvd193aWR0aCA9IGltZ3VpLkdldFdpbmRvd1dpZHRoKCkKICAgIGxvY2FsIGJ1dHRvbl93aWR0aCA9IHdpbmRvd193aWR0aCAtIDQwCgogICAgZm9yIF8sIHNlY3Rpb24gaW4gaXBhaXJzKGFydGljbGVfc2VjdGlvbnMpIGRvCiAgICAgICAgaWYgaW1ndWkuVHJlZU5vZGUoc2VjdGlvbi5uYW1lKSB0aGVuCiAgICAgICAgICAgIGZvciBfLCBpdGVtIGluIGlwYWlycyhzZWN0aW9uLml0ZW1zKSBkbwogICAgICAgICAgICAgICAgbG9jYWwgYnRuX2xhYmVsID0gaXRlbS5hcnRpY2xlIC4uICIgIiAuLiBpdGVtLmRlc2MgLi4gIiBbIiAuLiBpdGVtLmxldmVsIC4uICLimIVdIgogICAgICAgICAgICAgICAgaWYgaW1ndWkuQnV0dG9uKGJ0bl9sYWJlbCwgaW1ndWkuSW1WZWMyKGJ1dHRvbl93aWR0aCwgMjgpKSB0aGVuCiAgICAgICAgICAgICAgICAgICAgc2FtcFNlbmRDaGF0KHU4OmRlY29kZSgiL3N1ICIgLi4gdGFyZ2V0X2lkIC4uICIgIiAuLiBpdGVtLmxldmVsIC4uICIgIiAuLiBpdGVtLmFydGljbGUgLi4gIiDQo9CaIikpCiAgICAgICAgICAgICAgICAgICAgd3JpdGVfbG9nKHRhcmdldF9uaWNrLCBpdGVtLmFydGljbGUsICLQo9CaIiwgaXRlbS5sZXZlbCkKICAgICAgICAgICAgICAgICAgICBzYW1wQWRkQ2hhdE1lc3NhZ2UodTg6ZGVjb2RlKCJbRldhbnRlZF0g0KDQvtC30YvRgdC6INCy0YvQtNCw0L0hIiksIDB4MDBGRjAwKQogICAgICAgICAgICAgICAgICAgIHNob3dfd2luZG93LnYgPSBmYWxzZQogICAgICAgICAgICAgICAgZW5kCiAgICAgICAgICAgIGVuZAogICAgICAgICAgICBpbWd1aS5UcmVlUG9wKCkKICAgICAgICBlbmQKICAgIGVuZAoKICAgIGltZ3VpLlNlcGFyYXRvcigpCgogICAgaWYgaW1ndWkuVHJlZU5vZGUoItCQ0JogKNGI0YLRgNCw0YTRiy/RgNC+0LfRi9GB0LopIikgdGhlbgogICAgICAgIGZvciBzZWN0aW9uX251bSwgaXRlbXMgaW4gcGFpcnMoYWtfc2VjdGlvbnMpIGRvCiAgICAgICAgICAgIGxvY2FsIHNlY3Rpb25fbmFtZSA9IGFrX3NlY3Rpb25fbmFtZXNbc2VjdGlvbl9udW1dIG9yICgi0KDQsNC30LTQtdC7ICIgLi4gc2VjdGlvbl9udW0pCiAgICAgICAgICAgIGlmIGltZ3VpLlRyZWVOb2RlKHNlY3Rpb25fbmFtZSkgdGhlbgogICAgICAgICAgICAgICAgZm9yIF8sIGl0ZW0gaW4gaXBhaXJzKGl0ZW1zKSBkbwogICAgICAgICAgICAgICAgICAgIGlmIGl0ZW0uc3VtbWEgYW5kIGl0ZW0uc3VtbWEgPiAwIHRoZW4KICAgICAgICAgICAgICAgICAgICAgICAgbG9jYWwgYnRuX2xhYmVsID0gaXRlbS5hcnRpY2xlIC4uICIg4oCUICIgLi4gaXRlbS5kZXNjIC4uICIgKCIgLi4gaXRlbS5zdW1tYSAuLiAiINGA0YPQsSkiCiAgICAgICAgICAgICAgICAgICAgICAgIGlmIGltZ3VpLkJ1dHRvbihidG5fbGFiZWwsIGltZ3VpLkltVmVjMihidXR0b25fd2lkdGgsIDI4KSkgdGhlbgogICAgICAgICAgICAgICAgICAgICAgICAgICAgc2FtcFNlbmRDaGF0KHU4OmRlY29kZSgiL3RpY2tldCAiIC4uIHRhcmdldF9pZCAuLiAiICIgLi4gaXRlbS5zdW1tYSAuLiAiICIgLi4gaXRlbS5hcnRpY2xlIC4uICIg0JrQvtCQ0L8iKSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgIHdyaXRlX2xvZyh0YXJnZXRfbmljaywgaXRlbS5hcnRpY2xlLCAi0JrQvtCQ0J8iLCBpdGVtLnN1bW1hKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgc2FtcEFkZENoYXRNZXNzYWdlKHU4OmRlY29kZSgiW0ZXYW50ZWRdINCo0YLRgNCw0YQg0LLRi9C00LDQvSEiKSwgMHgwMEZGMDApCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzaG93X3dpbmRvdy52ID0gZmFsc2UKICAgICAgICAgICAgICAgICAgICAgICAgZW5kCiAgICAgICAgICAgICAgICAgICAgZW5kCiAgICAgICAgICAgICAgICBlbmQKICAgICAgICAgICAgICAgIGltZ3VpLlRyZWVQb3AoKQogICAgICAgICAgICBlbmQKICAgICAgICBlbmQKICAgICAgICBpbWd1aS5UcmVlUG9wKCkKICAgIGVuZAoKICAgIGltZ3VpLlNlcGFyYXRvcigpCgogICAgaW1ndWkuVGV4dENvbG9yZWQoaW1ndWkuSW1WZWM0KDAuNiwwLjYsMC42LDEpLCAi0JHRi9GB0YLRgNGL0Lkg0LTQvtGB0YLRg9C/OiIpCiAgICBpbWd1aS5TYW1lTGluZSgpCiAgICBpZiBpbWd1aS5CdXR0b24oItCe0YLQutGA0YvRgtGMINC70L7QsyIsIGltZ3VpLkltVmVjMigxMTAsIDIyKSkgdGhlbgogICAgICAgIG9wZW5fbG9nKCkKICAgIGVuZAogICAgaW1ndWkuU2FtZUxpbmUoKQogICAgaWYgaW1ndWkuQnV0dG9uKCLQn9Cw0L/QutCwINC30LDQv9C40YHQtdC5IiwgaW1ndWkuSW1WZWMyKDEyMCwgMjIpKSB0aGVuCiAgICAgICAgbG9jYWwgcmVjX2ZvbGRlciA9IFJFQ09SRElOR1NfRk9MREVSOmdzdWIoIiUlVVNFUk5BTUUlJSIsIG9zLmdldGVudigiVVNFUk5BTUUiKSBvciAiVXNlciIpCiAgICAgICAgb3MuZXhlY3V0ZSgnY21kIC9jIHN0YXJ0ICIiICInIC4uIHJlY19mb2xkZXIgLi4gJyInKQogICAgZW5kCgogICAgaW1ndWkuU2VwYXJhdG9yKCkKICAgIGltZ3VpLlRleHRDb2xvcmVkKGFjY2VudCwgImRldjogWXVraV9Lb21vcmkiKQogICAgaW1ndWkuU2FtZUxpbmUoKQogICAgaW1ndWkuVGV4dENvbG9yZWQoYWNjZW50LCAiY29udGFjdDoiKQogICAgaW1ndWkuU2FtZUxpbmUoKQogICAgaW1ndWkuUHVzaFN0eWxlQ29sb3IoaW1ndWkuQ29sLlRleHQsIGltZ3VpLkltVmVjNCgwLDAsMCwxKSkKICAgIGlmIGltZ3VpLkJ1dHRvbigiKmNsaWNrKiIsIGltZ3VpLkltVmVjMig5MCwgMjQpKSB0aGVuCiAgICAgICAgb3MuZXhlY3V0ZSgnY21kIC9jIHN0YXJ0ICIiICJodHRwczovL3QubWUvd3J0YnIiJykKICAgIGVuZAogICAgaW1ndWkuUG9wU3R5bGVDb2xvcigxKQoKICAgIGltZ3VpLkVuZCgpCiAgICBpbWd1aS5Qb3BTdHlsZVZhcigyKQogICAgaW1ndWkuUG9wU3R5bGVDb2xvcigxMykKZW5kCg==" download="fixedwanted.lua">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Скачать
+    </a>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- DEV -->
+<div class="section" id="dev">
+  <div class="sec-tag">разработчик</div>
+  <h2 class="sec-title">Автор</h2>
+  <div class="dev-card">
+    <div class="dev-avatar">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="dev-name">wrtbr</div>
+      <div class="dev-role">Lua / MoonLoader разработчик · SA:MP скрипты</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-wrap">
+    <div class="foot-copy">Fixed Wanted — MoonLoader скрипт для SA:MP</div>
+    <div class="foot-tag">dev: wrtbr</div>
+  </div>
+</footer>
+
+</body>
+</html>
