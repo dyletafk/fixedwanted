@@ -281,7 +281,7 @@ function imgui.OnDrawFrame()
                 local btn_label = item.article .. " " .. item.desc .. " [" .. item.level .. "★]"
                 if imgui.Button(btn_label, imgui.ImVec2(button_width, 28)) then
                     sampSendChat(u8:decode("/su " .. target_id .. " " .. item.level .. " " .. item.article .. " УК"))
-                    write_log(target_nick, item.article, "УК", item.level)
+write_log(u8:encode(target_nick), item.article, "УК", item.level)
                     sampAddChatMessage(u8:decode("[FWanted] Розыск выдан!"), 0x00FF00)
                     show_window.v = false
                 end
@@ -301,7 +301,7 @@ function imgui.OnDrawFrame()
                         local btn_label = item.article .. " — " .. item.desc .. " (" .. item.summa .. " руб)"
                         if imgui.Button(btn_label, imgui.ImVec2(button_width, 28)) then
                             sampSendChat(u8:decode("/ticket " .. target_id .. " " .. item.summa .. " " .. item.article .. " КоАп"))
-                            write_log(target_nick, item.article, "КоАП", item.summa)
+write_log(u8:encode(target_nick), item.article, "КоАП", item.summa)
                             sampAddChatMessage(u8:decode("[FWanted] Штраф выдан!"), 0x00FF00)
                             show_window.v = false
                         end
