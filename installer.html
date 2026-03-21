@@ -186,10 +186,8 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--purple2),var(--r
     <p class="card-desc">Укажи полный путь до папки <code style="font-family:monospace;font-size:12px;color:var(--purple3)">moonloader</code> внутри твоей GTA. Туда будет помещён скрипт.</p>
 
     <div class="presets">
-      <button class="preset" onclick="fillMoon('C:\\\\GTA San Andreas\\\\moonloader')">C:\GTA SA</button>
-      <button class="preset" onclick="fillMoon('D:\\\\GTA San Andreas\\\\moonloader')">D:\GTA SA</button>
-      <button class="preset" onclick="fillMoon('C:\\\\Games\\\\GTA San Andreas\\\\moonloader')">C:\Games\GTA SA</button>
-      <button class="preset" onclick="fillMoon('D:\\\\Games\\\\GTA San Andreas\\\\moonloader')">D:\Games\GTA SA</button>
+      <button class="preset" onclick="fillMoon('D:\\\\Games\\\\Arizona Games Launcher\\\\bin\\\\rodina\\\\moonloader')">D:\Games\Arizona</button>
+      <button class="preset" onclick="fillMoon('C:\\\\Users\\\\%USERNAME%\\\\Games\\\\Arizona Games Launcher\\\\bin\\\\rodina\\\\moonloader')">C:\Users\Arizona</button>
     </div>
 
     <div class="field">
@@ -223,29 +221,30 @@ h1 em{font-style:normal;background:linear-gradient(135deg,var(--purple2),var(--r
     </div>
   </div>
 
-  <!-- STEP 3: Preview + Download -->
+  <!-- STEP 3: BAT Installer -->
   <div class="card" id="card3">
     <div class="card-header">
       <div class="card-num">3</div>
-      <div class="card-title">Проверь и скачай</div>
+      <div class="card-title">Установка</div>
     </div>
 
-    <div class="preview-box" id="preview">
-      <span class="key">RECORDINGS_FOLDER</span> = "<span class="val" id="prev_rec">—</span>"<br>
-      <span class="key">LOG_FILE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> = "<span class="val" id="prev_log">—</span>"<br>
-      <span class="key">BAT_FILE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> = "<span class="val" id="prev_bat">—</span>"
+    <div class="warn" id="warnEmpty" style="margin-bottom:16px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Заполни оба пути выше — кнопка появится
     </div>
 
-    <hr class="divider">
-
-    <div class="warn" id="warnEmpty" style="margin-bottom:14px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Заполни оба пути выше — кнопка скачивания появится
+    <div id="batInstructions" style="display:none;margin-bottom:18px">
+      <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--muted);line-height:1.9">
+        <div style="color:var(--text);font-weight:600;margin-bottom:10px;font-size:14px">Почти готово!</div>
+        <div>Нажми <b style="color:var(--purple3)">Скачать install.bat</b> и открой его.</div>
+        <div style="margin-top:6px">Он установит скрипт в выбранную папку и сам удалится.</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted2)">&#9889; Требуется интернет — скрипт скачивается с GitHub</div>
+      </div>
     </div>
 
-    <button class="dl-btn" id="dlBtn" disabled onclick="downloadScript()">
+    <button class="dl-btn" id="dlBtn" disabled onclick="downloadBat()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Скачать fixedwanted.lua
+      Скачать install.bat
     </button>
   </div>
 
@@ -287,15 +286,13 @@ function updatePreview(){
   const batFile = moon ? moon + '\\open_log.bat'    : '—';
   const recDisp = rec  ? rec : '—';
 
-  document.getElementById('prev_rec').textContent = recDisp;
-  document.getElementById('prev_log').textContent = logFile;
-  document.getElementById('prev_bat').textContent = batFile;
-
   const ok = moon.length > 2 && rec.length > 2;
   const btn = document.getElementById('dlBtn');
   const warn = document.getElementById('warnEmpty');
+  const instr = document.getElementById('batInstructions');
   btn.disabled = !ok;
   warn.style.display = ok ? 'none' : 'flex';
+  if(instr) instr.style.display = ok ? 'block' : 'none';
 
   // update step indicators
   setStep(moon.length > 2, rec.length > 2);
@@ -354,23 +351,45 @@ function luaStr(winPath){
   return winPath.replace(/\\/g,'\\\\');
 }
 
-function downloadScript(){
+function downloadBat(){
   const moon = normPath(document.getElementById('moonPath').value.trim());
   const rec  = normPath(document.getElementById('recPath').value.trim());
 
   const logFile = moon + '\\wanted_log.html';
   const batFile = moon + '\\open_log.bat';
+  const scriptUrl = 'https://dyletafk.github.io/fixedwanted/fixedwanted.lua';
+  const dest = moon + '\\fixedwanted.lua';
 
-  let src = b64ToText(TEMPLATE_B64);
+  const bat = [
+    '@echo off',
+    'chcp 65001 > nul',
+    'echo Установка Fixed Wanted...',
+    'echo.',
+    'if not exist "' + moon + '" (',
+    '    echo Папка не найдена: ' + moon,
+    '    pause',
+    '    exit /b 1',
+    ')',
+    'echo Скачиваю скрипт...',
+    'powershell -Command "Invoke-WebRequest -Uri \'' + scriptUrl + '\' -OutFile \'' + dest + '\'"',
+    'if exist "' + dest + '" (',
+    '    echo.',
+    '    echo Скрипт успешно установлен!',
+    '    echo Путь: ' + dest,
+    ') else (',
+    '    echo Ошибка загрузки! Проверь интернет.',
+    '    pause',
+    '    exit /b 1',
+    ')',
+    'echo.',
+    'echo Готово! Заходи в игру.',
+    'timeout /t 3 > nul',
+    '(goto) 2>nul & del "%~f0"'
+  ].join('\r\n');
 
-  src = src.replace('"__REC_FOLDER__"', '"' + luaStr(rec) + '"');
-  src = src.replace('"__LOG_FILE__"',   '"' + luaStr(logFile) + '"');
-  src = src.replace('"__BAT_FILE__"',   '"' + luaStr(batFile) + '"');
-
-  const b64out = textToB64(src);
   const a = document.createElement('a');
-  a.href = 'data:text/plain;base64,' + b64out;
-  a.download = 'fixedwanted.lua';
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(bat);
+  a.download = 'install.bat';
   a.click();
 
   document.getElementById('successCard').style.display = 'block';
