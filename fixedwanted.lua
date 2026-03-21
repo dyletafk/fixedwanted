@@ -11,8 +11,8 @@ local u8 = encoding.UTF8
 --  НАСТРОЙКИ
 -- ============================================================
 local RECORDINGS_FOLDER = "C:\\Users\\%USERNAME%\\Videos\\Desktop"
-local LOG_FILE          = "D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader\\wanted_log.html"
-local BAT_FILE          = "D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader\\open_log.bat"
+local LOG_FILE          = "D:\\Games\\rodina\\moonloader\\wanted_log.html"
+local BAT_FILE          = "D:\\Games\\rodina\\moonloader\\open_log.bat"
 -- ============================================================
 
 local show_window = imgui.ImBool(false)
@@ -244,13 +244,7 @@ function main()
 
     while true do
         wait(0)
-        local any_open = show_window.v
-        imgui.Process = any_open
-        if any_open then
-            sampSetCursorMode(2)
-        else
-            sampSetCursorMode(0)
-        end
+        imgui.Process = show_window.v
     end
 end
 
