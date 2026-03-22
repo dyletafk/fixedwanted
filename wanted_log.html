@@ -3,132 +3,455 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fixed Wanted �” Лог выдач</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Fixed Wanted — Лог выдач</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0c0c10;--card:#13131a;--card2:#0f0f17;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --purple:#7c3aed;--purple2:#9d5cf6;--purple3:#c4a0ff;--rose:#c026d3;
-  --text:#f0eeff;--muted:#8878aa;--muted2:#5e5580;
-  --green:#22c55e;
-}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  :root {
+    --bg:       #0a0a0f;
+    --bg2:      #0f0f18;
+    --bg3:      #14141f;
+    --accent:   #6c5ce7;
+    --accent2:  #a29bfe;
+    --accent-g: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    --text:     #e0e0f0;
+    --text-dim: #6b6b8a;
+    --text-mid: #9999bb;
+    --border2:  rgba(255,255,255,0.06);
+    --border-a: rgba(108,92,231,0.25);
+    --radius:   14px;
+    --radius-sm: 8px;
+  }
 
-.bg-blur{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.18}
-.orb1{width:500px;height:500px;background:var(--purple);top:-160px;left:-100px;animation:drift 18s ease-in-out infinite}
-.orb2{width:380px;height:380px;background:var(--rose);bottom:-100px;right:-80px;animation:drift 14s ease-in-out infinite reverse}
-@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
 
-.wrap{max-width:1100px;margin:0 auto;padding:48px 24px 80px;position:relative;z-index:1}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-.header{margin-bottom:36px}
-.logo{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);margin-bottom:12px}
-.logo span{color:var(--purple3)}
-h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
-h1 em{font-style:normal;background:linear-gradient(135deg,var(--purple2),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.header-sub{font-size:13px;color:var(--muted)}
+  #starfield {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:28px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px 16px;text-align:center}
-.stat-num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;background:linear-gradient(135deg,var(--purple2),#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(90px); pointer-events: none; z-index: 0;
+  }
+  .orb1 { width: 500px; height: 500px; background: rgba(108,92,231,0.07); top: -150px; left: -150px; }
+  .orb2 { width: 350px; height: 350px; background: rgba(162,155,254,0.05); bottom: 50px; right: -80px; }
 
-.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.table-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.table-title{font-size:13px;font-weight:600;color:var(--text)}
-.table-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:5px}
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem; height: 64px;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border2);
+  }
 
-table{width:100%;border-collapse:collapse}
-thead tr{background:rgba(255,255,255,0.02)}
-th{padding:10px 16px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:left;border-bottom:1px solid var(--border)}
-td{padding:11px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:rgba(124,58,237,0.04)}
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 1rem; color: #fff; text-decoration: none;
+  }
 
-.badge-uk{background:rgba(150,0,24,0.2);color:#ff6b6b;border:1px solid rgba(150,0,24,0.3);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
-.badge-ap{background:rgba(26,77,122,0.2);color:#60a5fa;border:1px solid rgba(26,77,122,0.3);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
-.stars{color:#f0c040}
-.art{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple3);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.15);padding:2px 7px;border-radius:4px}
-.time-cell{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
-.nick{font-weight:500;color:var(--text)}
-.rec-link{color:var(--purple3);text-decoration:none;font-size:12px;display:inline-flex;align-items:center;gap:4px;opacity:0.7;transition:opacity 0.2s}
-.rec-link:hover{opacity:1}
-.num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)}
+  .nav-logo-mark {
+    width: 30px; height: 30px; background: var(--accent-g);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 800; color: #fff;
+  }
 
-.empty{text-align:center;padding:48px 24px;color:var(--muted)}
-.empty svg{opacity:0.3;margin-bottom:12px}
-.empty p{font-size:14px}
+  .nav-back {
+    color: var(--text-mid); text-decoration: none; font-size: 0.875rem;
+    font-weight: 500; transition: color 0.2s;
+  }
+  .nav-back:hover { color: #fff; }
 
-footer{text-align:center;margin-top:32px}
-footer a{font-size:12px;color:var(--muted2);text-decoration:none}
-footer a:hover{color:var(--purple3)}
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 96px 2rem 5rem;
+  }
+
+  /* HEADER */
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,92,231,0.1); border: 1px solid var(--border-a);
+    color: var(--accent2); font-size: 0.78rem; font-weight: 500;
+    padding: 6px 16px; border-radius: 50px; margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .bdot { width: 6px; height: 6px; background: var(--accent2); border-radius: 50%; animation: blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+  .page-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800; letter-spacing: -0.4px; color: #fff;
+    margin-bottom: 0.5rem;
+    animation: fadeUp 0.6s 0.05s ease both;
+  }
+  .page-title span {
+    background: var(--accent-g);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .page-sub {
+    color: var(--text-mid); font-size: 0.9rem; margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  /* STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+    animation: fadeUp 0.6s 0.15s ease both;
+  }
+
+  .stat {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .stat:hover { border-color: var(--border-a); }
+
+  .stat-num {
+    display: block; font-size: 2rem; font-weight: 800; color: #fff;
+    line-height: 1; margin-bottom: 4px;
+    background: var(--accent-g);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .stat-label {
+    display: block; font-size: 0.72rem; color: var(--text-dim);
+    font-weight: 500; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* TABLE CARD */
+  .table-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .table-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border2);
+    background: rgba(108,92,231,0.04);
+  }
+
+  .table-head-title {
+    font-size: 0.9rem; font-weight: 700; color: #fff;
+  }
+
+  .table-count {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.7rem; color: var(--accent2);
+    background: rgba(108,92,231,0.1);
+    border: 1px solid rgba(108,92,231,0.2);
+    padding: 3px 10px; border-radius: 50px;
+  }
+
+  table {
+    width: 100%; border-collapse: collapse;
+  }
+
+  thead tr {
+    background: rgba(255,255,255,0.02);
+  }
+
+  th {
+    padding: 10px 16px;
+    font-size: 0.68rem; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 1.5px; text-align: left;
+    border-bottom: 1px solid var(--border2);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 16px;
+    font-size: 0.875rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(108,92,231,0.04); }
+
+  .num {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.75rem; color: var(--text-dim);
+  }
+
+  .nick { font-weight: 600; color: #fff; }
+
+  .art {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.75rem; color: var(--accent2);
+    background: rgba(108,92,231,0.1);
+    border: 1px solid rgba(108,92,231,0.18);
+    padding: 2px 8px; border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  .badge-uk {
+    font-size: 0.68rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 50px;
+    white-space: nowrap;
+    background: rgba(255,75,110,0.1); color: #ff7096;
+    border: 1px solid rgba(255,75,110,0.2);
+  }
+
+  .badge-ap {
+    font-size: 0.68rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 50px;
+    white-space: nowrap;
+    background: rgba(255,196,60,0.08); color: #ffc23c;
+    border: 1px solid rgba(255,196,60,0.18);
+  }
+
+  .stars { color: #ff7096; font-size: 0.8rem; white-space: nowrap; }
+  .fine { color: #ffc23c; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.8rem; }
+
+  .time-cell {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.75rem; color: var(--text-dim); white-space: nowrap;
+  }
+
+  .rec-link {
+    color: var(--accent2); text-decoration: none;
+    font-size: 0.78rem; opacity: 0.7;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .rec-link:hover { opacity: 1; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-dim);
+  }
+
+  .empty-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(108,92,231,0.08);
+    border: 1px solid var(--border-a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin: 0 auto 1rem;
+    opacity: 0.6;
+  }
+
+  .empty-title { font-size: 1rem; font-weight: 600; color: var(--text-mid); margin-bottom: 0.4rem; }
+  .empty-sub { font-size: 0.85rem; }
+
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; margin-top: 2.5rem;
+    padding-bottom: 2rem;
+  }
+  footer a {
+    font-size: 0.82rem; color: var(--text-dim); text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--accent2); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+  @media (max-width: 700px) {
+    nav { padding: 0 1.2rem; }
+    main { padding: 84px 1.2rem 4rem; }
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(6), td:nth-child(6) { display: none; }
+  }
 </style>
 </head>
 <body>
 
-<div class="bg-blur">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-</div>
+<canvas id="starfield"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
 
-<div class="wrap">
-  <div class="header">
-    <div class="logo">fixed_wanted<span>.lua</span> �” лог выдач</div>
-    <h1>История <em>розысков и штрафов</em></h1>
-    <p class="header-sub">Все выдачи за текущую сессию · Время московское (МСК)</p>
-  </div>
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-mark">FW</div>
+    Fixed Wanted
+  </a>
+  <a href="index.html" class="nav-back">← На главную</a>
+</nav>
+
+<main>
+
+  <div class="page-badge"><span class="bdot"></span> Журнал выдач · МСК время</div>
+  <h1 class="page-title">История <span>розысков и штрафов</span></h1>
+  <p class="page-sub">Все выдачи за текущую сессию · Время московское (МСК)</p>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Всего</div></div>
-    <div class="stat"><div class="stat-num" id="stat-uk">0</div><div class="stat-label">УК</div></div>
-    <div class="stat"><div class="stat-num" id="stat-ak">0</div><div class="stat-label">КоАП</div></div>
+    <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Всего</span></div>
+    <div class="stat"><span class="stat-num" id="stat-uk">0</span><span class="stat-label">УК</span></div>
+    <div class="stat"><span class="stat-num" id="stat-ak">0</span><span class="stat-label">КоАП</span></div>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-card">
     <div class="table-head">
-      <div class="table-title">Журнал выдач</div>
+      <div class="table-head-title">Журнал выдач</div>
       <div class="table-count" id="entry-count">0 записей</div>
     </div>
     <table>
       <thead>
-
+        <tr>
+          <th>#</th>
+          <th>Время</th>
+          <th>Игрок</th>
+          <th>Статья</th>
+          <th>Тип</th>
+          <th>Мера</th>
+          <th>Запись</th>
+        </tr>
       </thead>
       <tbody id="log-body">
-
-
-
-
-
-</tbody>
+      </tbody>
     </table>
   </div>
 
   <footer>
     <a href="https://dyletafk.github.io/fixedwanted/">Fixed Wanted — Lua скрипт для Rodina RP</a>
   </footer>
-</div>
+
+</main>
 
 <script>
-// Считаем статистику после загрузки
-window.addEventListener('load', function() {
-  const rows = document.querySelectorAll('#log-body tr');
-  const total = rows.length;
-  let uk = 0, ak = 0;
-  rows.forEach(function(row) {
-    if (row.querySelector('.badge-uk')) uk++;
-    if (row.querySelector('.badge-ap')) ak++;
-  });
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-uk').textContent = uk;
-  document.getElementById('stat-ak').textContent = ak;
-  document.getElementById('entry-count').textContent = total + ' ' + (total === 1 ? 'запись' : total < 5 ? 'записи' : 'записей');
-
-  if (total === 0) {
-    document.querySelector('tbody').innerHTML = '';
+  // Starfield
+  const cv = document.getElementById('starfield');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * devicePixelRatio; cv.height = H * devicePixelRatio;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.scale(devicePixelRatio, devicePixelRatio);
   }
-});
-</s
+  resize();
+  window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
+
+  const COLORS = [
+    'rgba(255,255,255,', 'rgba(255,255,255,', 'rgba(220,215,255,',
+    'rgba(162,155,254,', 'rgba(200,195,255,'
+  ];
+
+  const stars = Array.from({length: 200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.3 + 0.15,
+    speed: Math.random() * 0.00006 + 0.00002,
+    phase: Math.random() * Math.PI * 2,
+    freq: Math.random() * 0.02 + 0.006,
+    baseAlpha: Math.random() * 0.55 + 0.2,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)]
+  }));
+
+  const shoots = [];
+  function spawnShoot() {
+    shoots.push({
+      x: Math.random() * 0.65, y: Math.random() * 0.35,
+      progress: 0, len: Math.random() * 0.12 + 0.07,
+      speed: Math.random() * 0.012 + 0.01,
+      angle: Math.PI / 5.5 + (Math.random() - 0.5) * 0.3
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      s.phase += s.freq;
+      const a = s.baseAlpha * (0.45 + 0.55 * Math.sin(s.phase));
+      s.y -= s.speed;
+      if (s.y < -0.01) { s.y = 1.01; s.x = Math.random(); }
+      const px = s.x * W, py = s.y * H;
+      if (s.r > 0.9) {
+        const glow = ctx.createRadialGradient(px, py, 0, px, py, s.r * 4);
+        glow.addColorStop(0, s.color + (a * 0.25) + ')');
+        glow.addColorStop(1, s.color + '0)');
+        ctx.beginPath(); ctx.arc(px, py, s.r * 4, 0, Math.PI * 2);
+        ctx.fillStyle = glow; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(px, py, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.color + a + ')'; ctx.fill();
+    }
+    for (let i = shoots.length - 1; i >= 0; i--) {
+      const ss = shoots[i];
+      ss.progress += ss.speed;
+      const alpha = ss.progress < 0.5 ? ss.progress * 2 : (1 - ss.progress) * 2;
+      const tailLen = Math.min(ss.progress, ss.len);
+      const hx = (ss.x + Math.cos(ss.angle) * ss.progress) * W;
+      const hy = (ss.y + Math.sin(ss.angle) * ss.progress) * H;
+      const tx = hx - Math.cos(ss.angle) * tailLen * W;
+      const ty = hy - Math.sin(ss.angle) * tailLen * H;
+      const grad = ctx.createLinearGradient(tx, ty, hx, hy);
+      grad.addColorStop(0, `rgba(255,255,255,0)`);
+      grad.addColorStop(0.4, `rgba(180,170,255,${alpha * 0.4})`);
+      grad.addColorStop(1, `rgba(255,255,255,${alpha})`);
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(hx, hy, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
+      if (ss.progress >= 1) shoots.splice(i, 1);
+    }
+    if (Math.random() < 0.003) spawnShoot();
+    requestAnimationFrame(draw);
+  }
+  spawnShoot(); draw();
+
+  // Stats counter
+  window.addEventListener('load', function () {
+    const rows = document.querySelectorAll('#log-body tr');
+    const total = rows.length;
+    let uk = 0, ak = 0;
+    rows.forEach(function (row) {
+      if (row.querySelector('.badge-uk')) uk++;
+      if (row.querySelector('.badge-ap')) ak++;
+    });
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-uk').textContent = uk;
+    document.getElementById('stat-ak').textContent = ak;
+    const word = total === 1 ? 'запись' : total < 5 ? 'записи' : 'записей';
+    document.getElementById('entry-count').textContent = total + ' ' + word;
+
+    if (total === 0) {
+      document.querySelector('tbody').innerHTML = `
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">Журнал пуст</div>
+            <div class="empty-sub">Выдачи появятся после использования скрипта в игре</div>
+          </div>
+        </td></tr>`;
+    }
+  });
+</script>
+</body>
+</html>
