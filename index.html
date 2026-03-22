@@ -4,522 +4,933 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fixed Wanted — Lua скрипт</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0c0c10;--card:#13131a;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --purple:#7c3aed;--purple2:#9d5cf6;--purple3:#c4a0ff;--rose:#c026d3;
-  --text:#f0eeff;--muted:#8878aa;--muted2:#5e5580;
-}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  :root {
+    --bg:       #0a0a0f;
+    --bg2:      #0f0f18;
+    --bg3:      #14141f;
+    --accent:   #6c5ce7;
+    --accent2:  #a29bfe;
+    --accent-g: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    --text:     #e0e0f0;
+    --text-dim: #6b6b8a;
+    --text-mid: #9999bb;
+    --border:   rgba(108,92,231,0.15);
+    --border2:  rgba(255,255,255,0.06);
+    --radius:   14px;
+    --radius-sm: 8px;
+  }
 
-.bg-blur{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.28}
-.orb1{width:520px;height:520px;background:var(--purple);top:-160px;left:-120px;animation:drift 18s ease-in-out infinite}
-.orb2{width:420px;height:420px;background:var(--rose);bottom:-120px;right:-80px;animation:drift 14s ease-in-out infinite reverse}
-.orb3{width:300px;height:300px;background:#4f46e5;top:38%;left:52%;animation:drift 22s ease-in-out infinite 4s}
-@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(22px,-26px)}66%{transform:translate(-16px,14px)}}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
 
-nav{position:sticky;top:0;z-index:100;background:rgba(12,12,16,0.82);backdrop-filter:blur(22px);border-bottom:1px solid var(--border)}
-.nav-wrap{max-width:1000px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:20px}
-.nav-logo{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--purple3);white-space:nowrap;margin-right:8px}
-.nav-logo span{color:var(--muted)}
-.nav-links{display:flex;align-items:center;gap:2px;flex:1}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;padding:6px 11px;border-radius:7px;transition:all 0.2s;white-space:nowrap}
-.nav-links a:hover{color:var(--purple3);background:rgba(124,58,237,0.1)}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
 
-.section-tabs{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:28px 24px 0}
-.tabs-row{display:flex;gap:9px;flex-wrap:wrap}
-.tab-btn{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);color:var(--muted);text-decoration:none;padding:10px 17px;font-size:13px;font-weight:500;border-radius:10px;transition:all 0.25s}
-.tab-btn .ti{display:flex;align-items:center}
-.tab-btn:hover{border-color:rgba(124,58,237,0.35);color:var(--purple3);background:rgba(124,58,237,0.07);transform:translateY(-2px);box-shadow:0 4px 16px rgba(124,58,237,0.12)}
+  #starfield {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-.hero{max-width:1000px;margin:0 auto;padding:56px 24px 52px;position:relative;z-index:1}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);color:var(--purple3);font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:22px}
-.badge-dot{width:5px;height:5px;border-radius:50%;background:var(--purple2);animation:blink 2s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
-.hero h1{font-size:clamp(32px,5.5vw,56px);font-weight:700;line-height:1.08;letter-spacing:-1.5px;margin-bottom:16px}
-.hero h1 span{background:linear-gradient(135deg,var(--purple2),var(--rose),#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:520px;margin-bottom:32px}
-.hero-sub b{color:var(--purple3);font-weight:500}
-.hero-btns{display:flex;gap:11px;flex-wrap:wrap}
-.btn-main{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--purple),var(--rose));border:none;color:#fff;padding:11px 24px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;text-decoration:none;box-shadow:0 4px 22px rgba(124,58,237,0.35);transition:all 0.25s}
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,0.5)}
-.btn-sec{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--border2);color:var(--muted);padding:10px 20px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border-radius:10px;text-decoration:none;transition:all 0.25s}
-.btn-sec:hover{border-color:rgba(124,58,237,0.4);color:var(--purple3)}
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 600px; height: 600px; background: rgba(108,92,231,0.07); top: -150px; left: -150px; }
+  .orb2 { width: 400px; height: 400px; background: rgba(162,155,254,0.05); bottom: 100px; right: -100px; }
 
-.stats{max-width:1000px;margin:0 auto;padding:0 24px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;position:relative;z-index:1}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;text-align:center}
-.stat-num{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;background:linear-gradient(135deg,var(--purple2),#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 64px;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border2);
+  }
 
-.divider{border:none;border-top:1px solid var(--border);margin:0}
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    text-decoration: none;
+  }
 
-.section{max-width:1000px;margin:0 auto;padding:56px 24px;position:relative;z-index:1}
-.sec-tag{display:inline-block;font-size:11px;font-weight:600;color:var(--purple3);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
-.sec-tag::before{content:'// '}
-.sec-title{font-size:clamp(20px,3vw,28px);font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
-.sec-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:32px}
+  .nav-logo-mark {
+    width: 30px; height: 30px;
+    background: var(--accent-g);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #fff;
+  }
 
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.feat{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;transition:all 0.3s;position:relative;overflow:hidden}
-.feat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--rose));transform:scaleX(0);transform-origin:left;transition:transform 0.35s}
-.feat:hover{border-color:rgba(124,58,237,0.28);transform:translateY(-3px)}
-.feat:hover::before{transform:scaleX(1)}
-.feat-ico{width:36px;height:36px;border-radius:9px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.18);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-.feat h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
-.feat p{font-size:13px;color:var(--muted);line-height:1.6}
-.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--purple3)}
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
 
-.law-block{margin-bottom:16px}
-.law-block:last-child{margin-bottom:0}
-.law-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.law-head{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
-.law-head-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;background:rgba(124,58,237,0.13);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0}
-.law-head-title{font-size:13px;font-weight:600;color:var(--text)}
-.law-items{padding:4px 0}
-.law-item{display:flex;align-items:center;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(255,255,255,0.028);transition:background 0.18s}
-.law-item:last-child{border-bottom:none}
-.law-item:hover{background:rgba(124,58,237,0.045)}
-.law-art{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);min-width:26px;flex-shrink:0}
-.law-desc{color:var(--text);flex:1;font-size:13px;line-height:1.35}
-.law-lvl{font-size:11px;font-weight:600;background:rgba(124,58,237,0.13);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:2px 8px;border-radius:5px;white-space:nowrap;font-family:'JetBrains Mono',monospace;flex-shrink:0}
-.law-fine{font-size:11px;font-weight:500;color:#86efac;font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0}
-.law-warn{font-size:11px;font-weight:500;color:#fbbf24;font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0}
-.law-note{font-size:11px;color:var(--muted2);padding:7px 18px 9px;border-top:1px solid rgba(255,255,255,0.04);line-height:1.5}
-.law-note::before{content:'※ ';color:var(--purple3)}
+  .nav-links a {
+    color: var(--text-mid);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
 
-.commands{display:flex;flex-direction:column;gap:9px}
-.cmd{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:15px 18px;display:flex;align-items:flex-start;gap:15px;transition:border-color 0.25s}
-.cmd:hover{border-color:rgba(124,58,237,0.3)}
-.cmd-tag{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--purple3);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);padding:4px 12px;border-radius:7px;white-space:nowrap;flex-shrink:0}
-.cmd-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
-.cmd-desc{font-size:13px;color:var(--muted);line-height:1.5}
+  .nav-links a:hover { color: #fff; }
 
-/* INSTALL */
-.install-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
-.step{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:15px 18px;display:flex;align-items:flex-start;gap:14px}
-.step-num{width:27px;height:27px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--rose));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
-.step-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
-.step-desc{font-size:13px;color:var(--muted);line-height:1.55}
-.code{font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(124,58,237,0.1);color:var(--purple3);border:1px solid rgba(124,58,237,0.2);padding:1px 6px;border-radius:4px}
+  .nav-cta {
+    background: var(--accent-g);
+    color: #fff;
+    padding: 9px 22px;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s, box-shadow 0.2s;
+  }
 
-/* DOWNLOAD CARD */
-.download-card{
-  background:var(--card);
-  border:1px solid rgba(124,58,237,0.25);
-  border-radius:14px;
-  padding:22px 24px;
-  display:flex;align-items:center;gap:20px;
-  position:relative;overflow:hidden;
-  transition:border-color 0.3s, box-shadow 0.3s;
-}
-.download-card::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(124,58,237,0.06),rgba(192,38,211,0.04));
-  pointer-events:none;
-}
-.download-card:hover{
-  border-color:rgba(124,58,237,0.45);
-  box-shadow:0 8px 32px rgba(124,58,237,0.15);
-}
-.dl-icon-wrap{
-  width:56px;height:56px;border-radius:12px;flex-shrink:0;
-  background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.22);
-  display:flex;align-items:center;justify-content:center;
-}
-.dl-info{flex:1}
-.dl-filename{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
-.dl-meta{font-size:12px;color:var(--muted);display:flex;gap:14px}
-.dl-meta span{display:flex;align-items:center;gap:5px}
-.dl-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  background:linear-gradient(135deg,var(--purple),var(--rose));
-  border:none;color:#fff;padding:10px 20px;
-  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
-  cursor:pointer;border-radius:9px;text-decoration:none;
-  box-shadow:0 4px 18px rgba(124,58,237,0.35);
-  transition:all 0.25s;white-space:nowrap;flex-shrink:0;
-}
-.dl-btn:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(124,58,237,0.5)}
+  .nav-cta:hover { opacity: 0.85; box-shadow: 0 0 30px rgba(108,92,231,0.4); }
 
-.dev-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.dev-avatar{width:56px;height:56px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--rose));display:flex;align-items:center;justify-content:center}
-.dev-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px}
-.dev-role{font-size:13px;color:var(--muted)}
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 2rem 5rem;
+  }
 
-footer{border-top:1px solid var(--border);position:relative;z-index:1}
-.foot-wrap{max-width:1000px;margin:0 auto;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.foot-copy{font-size:13px;color:var(--muted2)}
-.foot-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)}
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(108,92,231,0.1);
+    border: 1px solid rgba(108,92,231,0.25);
+    color: var(--accent2);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 50px;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.7s ease both;
+  }
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.hero{animation:fadeUp 0.65s ease both}
-.section-tabs{animation:fadeUp 0.55s ease 0.05s both}
-.stats{animation:fadeUp 0.65s ease 0.1s both}
+  .bdot {
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: blink 2s ease infinite;
+  }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    color: #fff;
+    max-width: 700px;
+    margin-bottom: 1.25rem;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .hero h1 .hl {
+    background: var(--accent-g);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    color: var(--text-mid);
+    font-size: 1rem;
+    max-width: 460px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+
+  .btn-p {
+    background: var(--accent-g);
+    color: #fff;
+    padding: 13px 30px;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s, box-shadow 0.2s;
+  }
+
+  .btn-p:hover { opacity: 0.85; box-shadow: 0 0 30px rgba(108,92,231,0.4); }
+
+  .btn-s {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--border2);
+    padding: 13px 30px;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-s:hover { border-color: rgba(108,92,231,0.4); color: #fff; }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4rem;
+    animation: fadeUp 0.7s 0.4s ease both;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.25rem 2rem;
+    text-align: center;
+    min-width: 110px;
+  }
+
+  .stat-n {
+    display: block;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-l {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* SECTION */
+  .s {
+    position: relative;
+    z-index: 1;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+
+  .s-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.6rem;
+  }
+
+  .s-title {
+    font-size: clamp(1.7rem, 4vw, 2.6rem);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 0.6rem;
+  }
+
+  .s-sub {
+    color: var(--text-mid);
+    font-size: 0.925rem;
+    max-width: 440px;
+    margin-bottom: 2.5rem;
+  }
+
+  /* FEATURES */
+  .fg {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .fc {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+
+  .fc:hover { border-color: rgba(108,92,231,0.3); transform: translateY(-2px); }
+
+  .fi {
+    width: 44px; height: 44px;
+    background: rgba(108,92,231,0.1);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .ft { font-weight: 700; font-size: 0.975rem; color: #fff; margin-bottom: 0.35rem; }
+  .fd { font-size: 0.86rem; color: var(--text-mid); line-height: 1.6; }
+
+  /* ACCORDION */
+  .ll { display: flex; flex-direction: column; gap: 6px; }
+
+  .lb {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .lb:hover { border-color: rgba(108,92,231,0.22); }
+  .lb.open { border-color: rgba(108,92,231,0.3); }
+
+  .lh {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ln {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--accent2);
+    background: rgba(108,92,231,0.1);
+    border: 1px solid rgba(108,92,231,0.2);
+    padding: 2px 10px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  .lname { flex: 1; font-size: 0.94rem; font-weight: 600; color: #fff; }
+
+  .lchev { color: var(--text-dim); font-size: 0.65rem; transition: transform 0.2s; }
+  .lb.open .lchev { transform: rotate(180deg); }
+
+  .litems { display: none; border-top: 1px solid var(--border2); }
+  .lb.open .litems { display: block; }
+
+  .li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.65rem 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .li:last-child { border-bottom: none; }
+
+  .lin { font-size: 0.7rem; color: var(--text-dim); min-width: 28px; font-weight: 500; }
+  .lit { flex: 1; font-size: 0.86rem; color: var(--text-mid); }
+
+  .badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  .bs { background: rgba(255,75,110,0.1); color: #ff7096; border: 1px solid rgba(255,75,110,0.2); }
+  .bf { background: rgba(255,196,60,0.08); color: #ffc23c; border: 1px solid rgba(255,196,60,0.18); }
+  .bw { background: rgba(108,92,231,0.12); color: var(--accent2); border: 1px solid rgba(108,92,231,0.25); }
+
+  /* COMMANDS */
+  .ct {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .ch {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    padding: 0.75rem 1.5rem;
+    background: rgba(108,92,231,0.05);
+    border-bottom: 1px solid var(--border2);
+    gap: 2rem;
+  }
+
+  .ch span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .cr {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    padding: 1.1rem 1.5rem;
+    gap: 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.2s;
+  }
+
+  .cr:last-child { border-bottom: none; }
+  .cr:hover { background: rgba(108,92,231,0.04); }
+
+  .cc {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .cd { font-size: 0.86rem; color: var(--text-mid); }
+  .cd strong { display: block; color: #fff; font-weight: 600; margin-bottom: 2px; font-size: 0.875rem; }
+
+  /* INSTALL */
+  .ig {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .ic {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .inum {
+    width: 32px; height: 32px;
+    background: var(--accent-g);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+
+  .it { font-weight: 700; font-size: 0.94rem; color: #fff; margin-bottom: 0.35rem; }
+  .id { font-size: 0.84rem; color: var(--text-mid); line-height: 1.6; }
+  .id code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: rgba(108,92,231,0.1);
+    color: var(--accent2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+
+  .dl {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .dlf {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .dlm { font-size: 0.8rem; color: var(--text-dim); }
+
+  /* DEV */
+  .dev {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 460px;
+    flex-wrap: wrap;
+  }
+
+  .dava {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--accent-g);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .dname { font-size: 1.2rem; font-weight: 700; color: #fff; }
+  .drole { font-size: 0.84rem; color: var(--text-dim); margin: 3px 0 8px; }
+  .dtag {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: var(--accent2);
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border2);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+
+  /* REVEAL */
+  .r {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .r.v { opacity: 1; transform: none; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+  @media (max-width: 680px) {
+    .nav-links { display: none; }
+    nav { padding: 0 1.2rem; }
+    .ch, .cr { grid-template-columns: 1fr; }
+    .ch { display: none; }
+  }
 </style>
 </head>
 <body>
 
-<div class="bg-blur">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
+<canvas id="starfield"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
 
+<!-- NAV -->
 <nav>
-  <div class="nav-wrap">
-    <div class="nav-logo">fixed_wanted<span>.lua</span></div>
-    <div class="nav-links">
-      <a href="#features">Функции</a>
-      <a href="#uk">УК</a>
-      <a href="#ak">АК</a>
-      <a href="#commands">Команды</a>
-      <a href="#install">Установка</a>
-    </div>
-  </div>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">FW</div>
+    Fixed Wanted
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Функции</a></li>
+    <li><a href="#uk">УК</a></li>
+    <li><a href="#ak">АК</a></li>
+    <li><a href="#commands">Команды</a></li>
+    <li><a href="#install">Установка</a></li>
+  </ul>
+  <a href="#install" class="nav-cta">Скачать</a>
 </nav>
-
-<!-- SECTION TABS -->
-<div class="section-tabs">
-  <div class="tabs-row">
-    <a class="tab-btn" href="#features">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Возможности
-    </a>
-    <a class="tab-btn" href="#uk">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>Полный УК
-    </a>
-    <a class="tab-btn" href="#ak">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Полный АК
-    </a>
-    <a class="tab-btn" href="#commands">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>Команды
-    </a>
-    <a class="tab-btn" href="#install">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Установка
-    </a>
-    <a class="tab-btn" href="#dev">
-      <span class="ti"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Разработчик
-    </a>
-  </div>
-</div>
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-badge"><span class="badge-dot"></span>Lua · RodinaRP 04 / SA:MP </div>
-  <h1>Умная выдача<br><span>розыска и штрафов</span></h1>
-  <p class="hero-sub">
-    Lua скрипт для <b>Rodina RP 04 </b> — быстрый интерфейс по статьям УК и АК,
-    автоматический HTML лог, команды за одно нажатие.
-  </p>
+  <div class="hero-badge"><span class="bdot"></span> Lua · SA:MP · RodinaRP 04</div>
+  <h1>Умная выдача <span class="hl">розыска</span> и штрафов</h1>
+  <p class="hero-sub">Быстрый интерфейс по статьям УК и АК, автоматический HTML лог, команды за одно нажатие.</p>
   <div class="hero-btns">
-    <a class="btn-main" href="#install">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Скачать скрипт
-    </a>
-    <a class="btn-sec" href="#uk">Смотреть статьи</a>
+    <a href="#install" class="btn-p">Скачать скрипт</a>
+    <a href="#uk" class="btn-s">Смотреть статьи</a>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><span class="stat-n">8</span><span class="stat-l">Статей УК</span></div>
+    <div class="stat-card"><span class="stat-n">31</span><span class="stat-l">Пунктов УК</span></div>
+    <div class="stat-card"><span class="stat-n">6</span><span class="stat-l">Статей АК</span></div>
+    <div class="stat-card"><span class="stat-n">HTML</span><span class="stat-l">Авто лог</span></div>
   </div>
 </div>
-
-<!-- STATS -->
-<div class="stats">
-  <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Статей УК</div></div>
-  <div class="stat-card"><div class="stat-num">31</div><div class="stat-label">Пунктов УК</div></div>
-  <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Статей АК</div></div>
-  <div class="stat-card"><div class="stat-num">HTML</div><div class="stat-label">Авто лог</div></div>
-</div>
-
-<hr class="divider">
 
 <!-- FEATURES -->
-<div class="section" id="features">
-  <div class="sec-tag">возможности</div>
-  <h2 class="sec-title">Что умеет скрипт</h2>
-  <p class="sec-sub">Всё что нужно сотруднику — в одном окне</p>
-  <div class="features">
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-      <h3>Быстрая выдача</h3><p>Одна кнопка — и команда <span class="mono">/su</span> отправлена с нужным уровнем розыска автоматически</p>
-    </div>
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-      <h3>Полный УК</h3><p>8 статей, 31 пункт. Розыск от 1 до 6 звёзд — структурировано по разделам</p>
-    </div>
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-      <h3>АК и штрафы</h3><p>Авто-отправка <span class="mono">/ticket</span> с суммой и розыск по статьям административного кодекса</p>
-    </div>
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-      <h3>HTML лог</h3><p>Каждая выдача фиксируется в HTML файл — дата, игрок, статья, ссылка на запись</p>
-    </div>
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <h3>МСК время</h3><p>Время в логе автоматически подстраивается под московский часовой пояс</p>
-    </div>
-    <div class="feat">
-      <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
-      <h3>Быстрый доступ</h3><p>Открытие папки с записями и HTML лога прямо из интерфейса скрипта</p>
-    </div>
+<section class="s" id="features">
+  <div class="r">
+    <div class="s-label">Возможности</div>
+    <h2 class="s-title">Что умеет скрипт</h2>
+    <p class="s-sub">Всё что нужно сотруднику — в одном окне</p>
   </div>
-</div>
-
-<hr class="divider">
+  <div class="fg r">
+    <div class="fc"><div class="fi">⚡</div><div class="ft">Быстрая выдача</div><div class="fd">Одна кнопка — и команда /su отправлена с нужным уровнем розыска автоматически</div></div>
+    <div class="fc"><div class="fi">📋</div><div class="ft">Полный УК</div><div class="fd">8 статей, 31 пункт. Розыск от 1 до 6 звёзд — структурировано по разделам</div></div>
+    <div class="fc"><div class="fi">💰</div><div class="ft">АК и штрафы</div><div class="fd">Авто-отправка /ticket с суммой и розыск по статьям административного кодекса</div></div>
+    <div class="fc"><div class="fi">📁</div><div class="ft">HTML лог</div><div class="fd">Каждая выдача фиксируется в HTML файл — дата, игрок, статья, ссылка на запись</div></div>
+    <div class="fc"><div class="fi">🕒</div><div class="ft">МСК время</div><div class="fd">Время в логе автоматически подстраивается под московский часовой пояс</div></div>
+    <div class="fc"><div class="fi">🗂️</div><div class="ft">Быстрый доступ</div><div class="fd">Открытие папки с записями и HTML лога прямо из интерфейса скрипта</div></div>
+  </div>
+</section>
 
 <!-- УК -->
-<div class="section" id="uk">
-  <div class="sec-tag">уголовный кодекс</div>
-  <h2 class="sec-title">Полный УК</h2>
-  <p class="sec-sub">Все статьи и уровни розыска, встроенные в скрипт</p>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 1</span><span class="law-head-title">Причинение вреда здоровью человека</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">1.1</span><span class="law-desc">За безоружное нападение на человека</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">1.2</span><span class="law-desc">За вооружённое нападение на человека</span><span class="law-lvl">4 ★</span></div>
-      <div class="law-item"><span class="law-art">1.3</span><span class="law-desc">За похищение человека</span><span class="law-lvl">5 ★</span></div>
-      <div class="law-item"><span class="law-art">1.4</span><span class="law-desc">За убийство человека</span><span class="law-lvl">6 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 2</span><span class="law-head-title">Оружие и различное снаряжение</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">2.1</span><span class="law-desc">Ношение оружия в боевой готовности в открытом виде</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">2.2</span><span class="law-desc">За незаконное изготовление оружия</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">2.3</span><span class="law-desc">За незаконное хранение оружия</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">2.4</span><span class="law-desc">За продажу патронов и оружия</span><span class="law-lvl">4 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 3</span><span class="law-head-title">Наркотики, психотропные вещества</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">3.1</span><span class="law-desc">За хранение наркотических веществ</span><span class="law-lvl">5 ★</span></div>
-      <div class="law-item"><span class="law-art">3.2</span><span class="law-desc">За продажу наркотических веществ</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">3.3</span><span class="law-desc">За приобретение / употребление наркотических веществ</span><span class="law-lvl">1 ★</span></div>
-      <div class="law-item"><span class="law-art">3.4</span><span class="law-desc">За сбыт наркотических средств в особо крупном размере</span><span class="law-lvl">6 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 4</span><span class="law-head-title">Бандитизм</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">4.1</span><span class="law-desc">Выдача себя за сотрудника силовых структур</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">4.2</span><span class="law-desc">Препятствие движению кортежа, колонны или конвоя</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">4.3</span><span class="law-desc">Нападение на кортеж, колонну или конвой</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">4.4</span><span class="law-desc">Преследование служебного автомобиля во время погони</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">4.5</span><span class="law-desc">За угон транспорта</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">4.6</span><span class="law-desc">За попытку угона частного / служебного транспорта</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">4.7</span><span class="law-desc">Шантаж / вымогательство чужого имущества</span><span class="law-lvl">4 ★</span></div>
-      <div class="law-item"><span class="law-art">4.8</span><span class="law-desc">За совершение ограбления в отношении граждан</span><span class="law-lvl">3 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 5</span><span class="law-head-title">Терроризм</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">5.1</span><span class="law-desc">Совершение теракта путём захвата государственных учреждений</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">5.2</span><span class="law-desc">Захват заложников и причинение вреда их здоровью</span><span class="law-lvl">6 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 6</span><span class="law-head-title">Коррупция</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">6.1</span><span class="law-desc">Дача взятки должностному лицу</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">6.2</span><span class="law-desc">Принятие взятки должностным лицом</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">6.3</span><span class="law-desc">Вымогательство в отношении должностного лица</span><span class="law-lvl">6 ★</span></div>
-      <div class="law-item"><span class="law-art">6.4</span><span class="law-desc">Попытка дачи взятки должностному лицу</span><span class="law-lvl">4 ★</span></div>
-      <div class="law-item"><span class="law-art">6.5</span><span class="law-desc">Попытка получения взятки должностным лицом</span><span class="law-lvl">6 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 7</span><span class="law-head-title">Охраняемые объекты и временные запреты</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">7.1</span><span class="law-desc">Незаконное проникновение на территорию тюрьмы / военной базы</span><span class="law-lvl">5 ★</span></div>
-      <div class="law-item"><span class="law-art">7.2</span><span class="law-desc">Незаконное проникновение в служебное место</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">7.3</span><span class="law-desc">Незаконное проникновение на охраняемую территорию</span><span class="law-lvl">1 ★</span></div>
-      <div class="law-item"><span class="law-art">7.4</span><span class="law-desc">Создание помехи строю / тренировке / мероприятию</span><span class="law-lvl">2 ★</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 8</span><span class="law-head-title">Невыполнение законных требований</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">8.1</span><span class="law-desc">За невыполнение законных требований сотрудника правоохранительных органов</span><span class="law-lvl">1 ★</span></div>
-    </div>
-  </div></div>
-</div>
-
-<hr class="divider">
-
-<!-- АК -->
-<div class="section" id="ak">
-  <div class="sec-tag">административный кодекс</div>
-  <h2 class="sec-title">Полный АК</h2>
-  <p class="sec-sub">Штрафы и розыск по административным правонарушениям</p>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 1</span><span class="law-head-title">Правонарушения в сфере общественного порядка</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">1.1</span><span class="law-desc">Распитие спиртных напитков в общественных местах</span><span class="law-fine">20 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.2</span><span class="law-desc">Курение в общественных местах и зданиях</span><span class="law-fine">15 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.3</span><span class="law-desc">Нахождение в непристойном виде в общественных местах</span><span class="law-warn">предупр. / 100 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.4</span><span class="law-desc">Громкая музыка после 23:00</span><span class="law-warn">предупр. / 50 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.5</span><span class="law-desc">Блокирование проходов, входов и выходов</span><span class="law-fine">100 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.6</span><span class="law-desc">Агрессивное приставание к гражданам</span><span class="law-fine">100 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">1.7</span><span class="law-desc">Порча государственного имущества намеренно</span><span class="law-fine">100 000 ₽</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 2</span><span class="law-head-title">Оскорбление и неадекватное поведение</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">2.1</span><span class="law-desc">За оскорбление гражданского лица</span><span class="law-lvl">1 ★</span></div>
-      <div class="law-item"><span class="law-art">2.2</span><span class="law-desc">За оскорбление должностного лица</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">2.3</span><span class="law-desc">Систематическое использование нецензурной брани в общественных местах</span><span class="law-fine">50 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">2.4</span><span class="law-desc">Публичные угрозы без факта нападения</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">2.5</span><span class="law-desc">Справление естественных нужд в общественных местах</span><span class="law-fine">50 000 ₽</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 3</span><span class="law-head-title">Проституция</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">3.1</span><span class="law-desc">За занятие проституцией</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">3.2</span><span class="law-desc">За вовлечение в занятие проституцией</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">3.3</span><span class="law-desc">Организация притонов</span><span class="law-lvl">3 ★</span></div>
-      <div class="law-item"><span class="law-art">3.4</span><span class="law-desc">Реклама услуг интимного характера в общественных местах</span><span class="law-fine">200 000 ₽</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 4</span><span class="law-head-title">Ношение предметов, скрывающих лицо</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">4.1</span><span class="law-desc">Ношение маски гражданским лицом</span><span class="law-fine">50 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">4.2</span><span class="law-desc">Ношение маски государственными гражданскими служащими</span><span class="law-fine">100 000 ₽</span></div>
-    </div>
-    <div class="law-note">Под данное правило не попадают все силовые сотрудники в форме</div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 5</span><span class="law-head-title">Нарушения правил дорожного движения</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">5.1</span><span class="law-desc">Превышение установленной скорости движения</span><span class="law-fine">20 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">5.2</span><span class="law-desc">Игнорирование дорожных знаков и разметки</span><span class="law-fine">50 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">5.3</span><span class="law-desc">Движение по встречной полосе</span><span class="law-fine">100 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">5.4</span><span class="law-desc">Оставление ТС в неположенном месте</span><span class="law-fine">35 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">5.5</span><span class="law-desc">Управление ТС без водительского удостоверения</span><span class="law-fine">100 000 ₽</span></div>
-      <div class="law-item"><span class="law-art">5.6</span><span class="law-desc">Управление ТС в состоянии алкогольного / наркотического опьянения</span><span class="law-fine">500 000 ₽</span></div>
-    </div>
-  </div></div>
-
-  <div class="law-block"><div class="law-card">
-    <div class="law-head"><span class="law-head-num">Ст. 6</span><span class="law-head-title">Нарушение политических прав</span></div>
-    <div class="law-items">
-      <div class="law-item"><span class="law-art">6.1</span><span class="law-desc">Нарушение права гражданина на тайну голосования</span><span class="law-lvl">2 ★</span></div>
-      <div class="law-item"><span class="law-art">6.2</span><span class="law-desc">Нарушение агитационного периода</span><span class="law-lvl">1 ★</span></div>
-      <div class="law-item"><span class="law-art">6.3</span><span class="law-desc">Незаконная политическая агитация</span><span class="law-lvl">1 ★</span></div>
-    </div>
-  </div></div>
-</div>
-
-<hr class="divider">
-
-<!-- COMMANDS -->
-<div class="section" id="commands">
-  <div class="sec-tag">команды</div>
-  <h2 class="sec-title">Консольные команды</h2>
-  <p class="sec-sub">Вводятся в чат прямо в игре</p>
-  <div class="commands">
-    <div class="cmd">
-      <div class="cmd-tag">/sw [ID]</div>
-      <div><div class="cmd-name">Открыть интерфейс</div><div class="cmd-desc">Открывает окно выдачи розыска / штрафа для указанного игрока по его ID</div></div>
-    </div>
-    <div class="cmd">
-      <div class="cmd-tag">/swlog</div>
-      <div><div class="cmd-name">Открыть лог</div><div class="cmd-desc">Открывает HTML файл с историей всех выданных розысков и штрафов</div></div>
-    </div>
-    <div class="cmd">
-      <div class="cmd-tag">/swrec</div>
-      <div><div class="cmd-name">Папка с записями</div><div class="cmd-desc">Быстро открывает папку с видеозаписями через Проводник Windows</div></div>
-    </div>
+<section class="s" id="uk">
+  <div class="r">
+    <div class="s-label">Уголовный кодекс</div>
+    <h2 class="s-title">Полный УК</h2>
+    <p class="s-sub">Все статьи и уровни розыска, встроенные в скрипт</p>
   </div>
-</div>
-
-<hr class="divider">
-
-<!-- INSTALL -->
-<div class="section" id="install">
-  <div class="sec-tag">установка</div>
-  <h2 class="sec-title">Как установить</h2>
-  <p class="sec-sub">Следуй шагам ниже — займёт меньше минуты</p>
-
-  <div class="install-steps">
-    <div class="step"><div class="step-num">1</div><div><div class="step-title">Скачать скрипт</div><div class="step-desc">Скачай файл <span class="code">fixedwanted.lua</span> по кнопке ниже</div></div></div>
-    <div class="step"><div class="step-num">2</div><div><div class="step-title">Поместить в папку MoonLoader</div><div class="step-desc">Скопируй файл в <span class="code">GTA San Andreas\moonloader\</span></div></div></div>
-    <div class="step"><div class="step-num">3</div><div><div class="step-title">Настроить пути в скрипте</div><div class="step-desc">Открой .lua файл и укажи свои пути к папке записей и файлу лога в секции <span class="code">-- НАСТРОЙКИ</span></div></div></div>
-    <div class="step"><div class="step-num">4</div><div><div class="step-title">Запустить игру</div><div class="step-desc">Зайди в игру — скрипт загрузится автоматически. В чате появится <span class="code">[FWanted] Скрипт загружен!</span></div></div></div>
-  </div>
-
-  <!-- DOWNLOAD CARD -->
-  <div class="download-card">
-    <div class="dl-icon-wrap">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4a0ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-        <polyline points="13 2 13 9 20 9"/>
-        <line x1="12" y1="13" x2="12" y2="18"/>
-        <polyline points="9 16 12 19 15 16"/>
-      </svg>
-    </div>
-    <div class="dl-info">
-      <div class="dl-filename">fixedwanted.lua</div>
-      <div class="dl-meta">
-        <span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          Lua · MoonLoader
-        </span>
-        <span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Актуальная версия
-        </span>
+  <div class="ll r">
+    <div class="lb open">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 1</span><span class="lname">Причинение вреда здоровью человека</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">1.1</span><span class="lit">За безоружное нападение на человека</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">1.2</span><span class="lit">За вооружённое нападение на человека</span><span class="badge bs">4 ★</span></div>
+        <div class="li"><span class="lin">1.3</span><span class="lit">За похищение человека</span><span class="badge bs">5 ★</span></div>
+        <div class="li"><span class="lin">1.4</span><span class="lit">За убийство человека</span><span class="badge bs">6 ★</span></div>
       </div>
     </div>
-    <a class="dl-btn" href="installer.html" target="_blank">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Скачать
-    </a>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 2</span><span class="lname">Оружие и различное снаряжение</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">2.1</span><span class="lit">Ношение оружия в боевой готовности в открытом виде</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">2.2</span><span class="lit">За незаконное изготовление оружия</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">2.3</span><span class="lit">За незаконное хранение оружия</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">2.4</span><span class="lit">За продажу патронов и оружия</span><span class="badge bs">4 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 3</span><span class="lname">Наркотики, психотропные вещества</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">3.1</span><span class="lit">За хранение наркотических веществ</span><span class="badge bs">5 ★</span></div>
+        <div class="li"><span class="lin">3.2</span><span class="lit">За продажу наркотических веществ</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">3.3</span><span class="lit">За приобретение / употребление наркотических веществ</span><span class="badge bs">1 ★</span></div>
+        <div class="li"><span class="lin">3.4</span><span class="lit">За сбыт наркотических средств в особо крупном размере</span><span class="badge bs">6 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 4</span><span class="lname">Бандитизм</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">4.1</span><span class="lit">Выдача себя за сотрудника силовых структур</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">4.2</span><span class="lit">Препятствие движению кортежа, колонны или конвоя</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">4.3</span><span class="lit">Нападение на кортеж, колонну или конвой</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">4.4</span><span class="lit">Преследование служебного автомобиля во время погони</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">4.5</span><span class="lit">За угон транспорта</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">4.6</span><span class="lit">За попытку угона частного / служебного транспорта</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">4.7</span><span class="lit">Шантаж / вымогательство чужого имущества</span><span class="badge bs">4 ★</span></div>
+        <div class="li"><span class="lin">4.8</span><span class="lit">За совершение ограбления в отношении граждан</span><span class="badge bs">3 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 5</span><span class="lname">Терроризм</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">5.1</span><span class="lit">Совершение теракта путём захвата государственных учреждений</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">5.2</span><span class="lit">Захват заложников и причинение вреда их здоровью</span><span class="badge bs">6 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 6</span><span class="lname">Коррупция</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">6.1</span><span class="lit">Дача взятки должностному лицу</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">6.2</span><span class="lit">Принятие взятки должностным лицом</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">6.3</span><span class="lit">Вымогательство в отношении должностного лица</span><span class="badge bs">6 ★</span></div>
+        <div class="li"><span class="lin">6.4</span><span class="lit">Попытка дачи взятки должностному лицу</span><span class="badge bs">4 ★</span></div>
+        <div class="li"><span class="lin">6.5</span><span class="lit">Попытка получения взятки должностным лицом</span><span class="badge bs">6 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 7</span><span class="lname">Охраняемые объекты и временные запреты</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">7.1</span><span class="lit">Незаконное проникновение на территорию тюрьмы / военной базы</span><span class="badge bs">5 ★</span></div>
+        <div class="li"><span class="lin">7.2</span><span class="lit">Незаконное проникновение в служебное место</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">7.3</span><span class="lit">Незаконное проникновение на охраняемую территорию</span><span class="badge bs">1 ★</span></div>
+        <div class="li"><span class="lin">7.4</span><span class="lit">Создание помехи строю / тренировке / мероприятию</span><span class="badge bs">2 ★</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 8</span><span class="lname">Невыполнение законных требований</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">8.1</span><span class="lit">За невыполнение законных требований сотрудника правоохранительных органов</span><span class="badge bs">1 ★</span></div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<hr class="divider">
+<!-- АК -->
+<section class="s" id="ak">
+  <div class="r">
+    <div class="s-label">Административный кодекс</div>
+    <h2 class="s-title">Полный АК</h2>
+    <p class="s-sub">Штрафы и розыск по административным правонарушениям</p>
+  </div>
+  <div class="ll r">
+    <div class="lb open">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 1</span><span class="lname">Правонарушения в сфере общественного порядка</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">1.1</span><span class="lit">Распитие спиртных напитков в общественных местах</span><span class="badge bf">20 000 ₽</span></div>
+        <div class="li"><span class="lin">1.2</span><span class="lit">Курение в общественных местах и зданиях</span><span class="badge bf">15 000 ₽</span></div>
+        <div class="li"><span class="lin">1.3</span><span class="lit">Нахождение в непристойном виде в общественных местах</span><span class="badge bw">предупр. / 100 000 ₽</span></div>
+        <div class="li"><span class="lin">1.4</span><span class="lit">Громкая музыка после 23:00</span><span class="badge bw">предупр. / 50 000 ₽</span></div>
+        <div class="li"><span class="lin">1.5</span><span class="lit">Блокирование проходов, входов и выходов</span><span class="badge bf">100 000 ₽</span></div>
+        <div class="li"><span class="lin">1.6</span><span class="lit">Агрессивное приставание к гражданам</span><span class="badge bf">100 000 ₽</span></div>
+        <div class="li"><span class="lin">1.7</span><span class="lit">Порча государственного имущества намеренно</span><span class="badge bf">100 000 ₽</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 2</span><span class="lname">Оскорбление и неадекватное поведение</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">2.1</span><span class="lit">За оскорбление гражданского лица</span><span class="badge bs">1 ★</span></div>
+        <div class="li"><span class="lin">2.2</span><span class="lit">За оскорбление должностного лица</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">2.3</span><span class="lit">Систематическое использование нецензурной брани в общественных местах</span><span class="badge bf">50 000 ₽</span></div>
+        <div class="li"><span class="lin">2.4</span><span class="lit">Публичные угрозы без факта нападения</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">2.5</span><span class="lit">Справление естественных нужд в общественных местах</span><span class="badge bf">50 000 ₽</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 3</span><span class="lname">Проституция</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">3.1</span><span class="lit">За занятие проституцией</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">3.2</span><span class="lit">За вовлечение в занятие проституцией</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">3.3</span><span class="lit">Организация притонов</span><span class="badge bs">3 ★</span></div>
+        <div class="li"><span class="lin">3.4</span><span class="lit">Реклама услуг интимного характера в общественных местах</span><span class="badge bf">200 000 ₽</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 4</span><span class="lname">Ношение предметов, скрывающих лицо</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">4.1</span><span class="lit">Ношение маски гражданским лицом</span><span class="badge bf">50 000 ₽</span></div>
+        <div class="li"><span class="lin">4.2</span><span class="lit">Ношение маски государственными гражданскими служащими</span><span class="badge bf">100 000 ₽</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 5</span><span class="lname">Нарушения правил дорожного движения</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">5.1</span><span class="lit">Превышение установленной скорости движения</span><span class="badge bf">20 000 ₽</span></div>
+        <div class="li"><span class="lin">5.2</span><span class="lit">Игнорирование дорожных знаков и разметки</span><span class="badge bf">50 000 ₽</span></div>
+        <div class="li"><span class="lin">5.3</span><span class="lit">Движение по встречной полосе</span><span class="badge bf">100 000 ₽</span></div>
+        <div class="li"><span class="lin">5.4</span><span class="lit">Оставление ТС в неположенном месте</span><span class="badge bf">35 000 ₽</span></div>
+        <div class="li"><span class="lin">5.5</span><span class="lit">Управление ТС без водительского удостоверения</span><span class="badge bf">100 000 ₽</span></div>
+        <div class="li"><span class="lin">5.6</span><span class="lit">Управление ТС в состоянии алкогольного / наркотического опьянения</span><span class="badge bf">500 000 ₽</span></div>
+      </div>
+    </div>
+    <div class="lb">
+      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 6</span><span class="lname">Нарушение политических прав</span><span class="lchev">▼</span></div>
+      <div class="litems">
+        <div class="li"><span class="lin">6.1</span><span class="lit">Нарушение права гражданина на тайну голосования</span><span class="badge bs">2 ★</span></div>
+        <div class="li"><span class="lin">6.2</span><span class="lit">Нарушение агитационного периода</span><span class="badge bs">1 ★</span></div>
+        <div class="li"><span class="lin">6.3</span><span class="lit">Незаконная политическая агитация</span><span class="badge bs">1 ★</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMANDS -->
+<section class="s" id="commands">
+  <div class="r">
+    <div class="s-label">Команды</div>
+    <h2 class="s-title">Консольные команды</h2>
+    <p class="s-sub">Вводятся в чат прямо в игре</p>
+  </div>
+  <div class="ct r">
+    <div class="ch"><span>Команда</span><span>Описание</span></div>
+    <div class="cr"><span class="cc">/sw [ID]</span><span class="cd"><strong>Открыть интерфейс</strong>Открывает окно выдачи розыска / штрафа для указанного игрока по его ID</span></div>
+    <div class="cr"><span class="cc">/swlog</span><span class="cd"><strong>Открыть лог</strong>Открывает HTML файл с историей всех выданных розысков и штрафов</span></div>
+    <div class="cr"><span class="cc">/swrec</span><span class="cd"><strong>Папка с записями</strong>Быстро открывает папку с видеозаписями через Проводник Windows</span></div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="s" id="install">
+  <div class="r">
+    <div class="s-label">Установка</div>
+    <h2 class="s-title">Как установить</h2>
+    <p class="s-sub">Займёт меньше минуты</p>
+  </div>
+  <div class="ig r">
+    <div class="ic"><div class="inum">1</div><div class="it">Скачать скрипт</div><div class="id">Скачай файл <code>fixedwanted.lua</code> по кнопке ниже</div></div>
+    <div class="ic"><div class="inum">2</div><div class="it">Поместить в MoonLoader</div><div class="id">Скопируй файл в <code>GTA San Andreas\moonloader\</code></div></div>
+    <div class="ic"><div class="inum">3</div><div class="it">Настроить пути</div><div class="id">Открой <code>.lua</code> и укажи пути в секции <code>-- НАСТРОЙКИ</code></div></div>
+    <div class="ic"><div class="inum">4</div><div class="it">Запустить игру</div><div class="id">В чате появится <code>[FWanted] Скрипт загружен!</code></div></div>
+  </div>
+  <div class="dl r">
+    <div><div class="dlf">fixedwanted.lua</div><div class="dlm">Lua · MoonLoader · SA:MP · Актуальная версия</div></div>
+    <a href="https://dyletafk.github.io/fixedwanted/installer.html" class="btn-p">Скачать</a>
+  </div>
+</section>
 
 <!-- DEV -->
-<div class="section" id="dev">
-  <div class="sec-tag">разработчик</div>
-  <h2 class="sec-title">Автор</h2>
-  <div class="dev-card">
-    <div class="dev-avatar">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
+<section class="s" id="dev">
+  <div class="r">
+    <div class="s-label">Разработчик</div>
+    <h2 class="s-title">Автор</h2>
+  </div>
+  <div class="dev r">
+    <div class="dava">D</div>
     <div>
-      <div class="dev-name">dylet</div>
-      <div class="dev-role">Lua разработчик · SA:MP скрипты</div>
+      <div class="dname">dylet</div>
+      <div class="drole">Lua разработчик · SA:MP скрипты</div>
+      <div class="dtag">@dylettt</div>
     </div>
   </div>
-</div>
+</section>
 
-<footer>
-  <div class="foot-wrap">
-    <div class="foot-copy">Fixed Wanted — Lua скрипт для Rodina RP</div>
-    <div class="foot-tag">dev: @dylettt</div>
-  </div>
-</footer>
+<footer>Fixed Wanted — Lua скрипт для Rodina RP &nbsp;·&nbsp; dyletafk</footer>
 
+<script>
+  // Starfield
+  const cv = document.getElementById('starfield');
+  const ctx = cv.getContext('2d');
+  let W, H;
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * devicePixelRatio; cv.height = H * devicePixelRatio;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+  resize();
+  window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
+
+  const COLORS = [
+    'rgba(255,255,255,', 'rgba(255,255,255,', 'rgba(220,215,255,',
+    'rgba(162,155,254,', 'rgba(200,195,255,'
+  ];
+
+  const stars = Array.from({length: 200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.3 + 0.15,
+    speed: Math.random() * 0.00006 + 0.00002,
+    phase: Math.random() * Math.PI * 2,
+    freq: Math.random() * 0.02 + 0.006,
+    baseAlpha: Math.random() * 0.55 + 0.2,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)]
+  }));
+
+  const shoots = [];
+  function spawnShoot() {
+    shoots.push({
+      x: Math.random() * 0.65, y: Math.random() * 0.35,
+      progress: 0, len: Math.random() * 0.12 + 0.07,
+      speed: Math.random() * 0.012 + 0.01,
+      angle: Math.PI / 5.5 + (Math.random() - 0.5) * 0.3
+    });
+  }
+
+  let t = 0;
+  function draw() {
+    t++;
+    ctx.clearRect(0, 0, W, H);
+
+    for (const s of stars) {
+      s.phase += s.freq;
+      const a = s.baseAlpha * (0.45 + 0.55 * Math.sin(s.phase));
+
+      s.y -= s.speed;
+      if (s.y < -0.01) { s.y = 1.01; s.x = Math.random(); }
+
+      const px = s.x * W, py = s.y * H;
+
+      if (s.r > 0.9) {
+        const glow = ctx.createRadialGradient(px, py, 0, px, py, s.r * 4);
+        glow.addColorStop(0, s.color + (a * 0.25) + ')');
+        glow.addColorStop(1, s.color + '0)');
+        ctx.beginPath();
+        ctx.arc(px, py, s.r * 4, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(px, py, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.color + a + ')';
+      ctx.fill();
+    }
+
+    for (let i = shoots.length - 1; i >= 0; i--) {
+      const ss = shoots[i];
+      ss.progress += ss.speed;
+      const alpha = ss.progress < 0.5
+        ? ss.progress * 2
+        : (1 - ss.progress) * 2;
+
+      const tailLen = Math.min(ss.progress, ss.len);
+      const hx = (ss.x + Math.cos(ss.angle) * ss.progress) * W;
+      const hy = (ss.y + Math.sin(ss.angle) * ss.progress) * H;
+      const tx = hx - Math.cos(ss.angle) * tailLen * W;
+      const ty = hy - Math.sin(ss.angle) * tailLen * H;
+
+      const grad = ctx.createLinearGradient(tx, ty, hx, hy);
+      grad.addColorStop(0, `rgba(255,255,255,0)`);
+      grad.addColorStop(0.4, `rgba(180,170,255,${alpha * 0.4})`);
+      grad.addColorStop(1, `rgba(255,255,255,${alpha})`);
+
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(hx, hy, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+
+      if (ss.progress >= 1) shoots.splice(i, 1);
+    }
+
+    if (Math.random() < 0.003) spawnShoot();
+    requestAnimationFrame(draw);
+  }
+
+  spawnShoot();
+  draw();
+
+  // Accordion
+  function tl(h) { h.parentElement.classList.toggle('open'); }
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('v'); }), { threshold: 0.08 });
+  document.querySelectorAll('.r').forEach(el => obs.observe(el));
+</script>
 </body>
 </html>
