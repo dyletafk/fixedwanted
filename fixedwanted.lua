@@ -10,9 +10,9 @@ local u8 = encoding.UTF8
 -- ============================================================
 --  НАСТРОЙКИ
 -- ============================================================
-local RECORDINGS_FOLDER = "C:/Users/%USERNAME%/Videos/Desktop"
-local LOG_FILE          = "D:/Games/rodina/moonloader/wanted_log.html"
-local BAT_FILE          = "D:/Games/rodina/moonloader/open_log.bat"
+local RECORDINGS_FOLDER = "D:\\Records"
+local LOG_FILE          = "D:\\Games\Arizona Games Launcher\\bin\rodina\\moonloader\\wanted_log.html"
+local BAT_FILE          = "D:\\Games\Arizona Games Launcher\\bin\rodina\\moonloader\\open_log.bat"
 -- ============================================================
 
 local show_window = imgui.ImBool(false)
