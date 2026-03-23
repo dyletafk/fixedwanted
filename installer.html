@@ -422,6 +422,252 @@
     .prog-step span:not(.prog-num) { display: none; }
   }
 </style>
+
+<script>
+  // All functions declared globally so onclick= works
+  function getUser() { return '%USERNAME%'; }
+
+  function setPick(field, val) {
+    document.getElementById('inp-' + field).value = val;
+    if (field === 'ml') validate(); else validate2();
+  }
+
+  function validate() {
+    var v = document.getElementById('inp-ml').value.trim();
+    var ok = v.length > 3;
+    document.getElementById('btn1').disabled = !ok;
+    document.getElementById('inp-ml').classList.toggle('valid', ok);
+  }
+
+  function validate2() {
+    var v = document.getElementById('inp-rec').value.trim();
+    var ok = v.length > 3;
+    document.getElementById('btn2').disabled = !ok;
+    document.getElementById('inp-rec').classList.toggle('valid', ok);
+  }
+
+  function rebuildPath(field) {
+    var disk = document.getElementById('disk-' + field).value;
+    var inp  = document.getElementById('inp-' + field);
+    var cur  = inp.value.trim().replace(/^[A-Za-z]:/, '');
+    if (!cur || cur.charAt(0) !== '\\') cur = '\\' + cur;
+    inp.value = disk + cur;
+    if (field === 'ml') validate(); else validate2();
+  }
+
+  function onPickerChange(field) {
+    var picker = document.getElementById('file-' + field);
+    if (!picker || !picker.files || picker.files.length === 0) return;
+    var folderName = (picker.files[0].webkitRelativePath || '').split('/')[0] || '';
+    if (!folderName) return;
+    var disk = document.getElementById('disk-' + field).value;
+    document.getElementById('inp-' + field).value = disk + '\\' + folderName;
+    if (field === 'ml') validate(); else validate2();
+    picker.value = '';
+  }
+
+  function setStepActive(n) {
+    for (var i = 1; i <= 3; i++) {
+      var ps   = document.getElementById('ps' + i);
+      var card = document.getElementById('card' + i);
+      ps.classList.remove('active','done');
+      card.classList.remove('active','done-card','locked');
+      if (i < n) {
+        ps.classList.add('done');
+        document.getElementById('pn' + i).textContent = '\u2713';
+        card.classList.add('done-card');
+        if (i <= 2) document.getElementById('pl' + i).classList.add('done');
+      } else if (i === n) {
+        ps.classList.add('active');
+        card.classList.add('active');
+        if (i > 1) document.getElementById('pl' + (i-1)).classList.add('done');
+      } else {
+        card.classList.add('locked');
+      }
+    }
+  }
+
+  function goStep2() {
+    setStepActive(2);
+    document.getElementById('card2-locked').style.display = 'none';
+    document.getElementById('card2-content').style.display = 'block';
+    document.getElementById('card2').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function backStep1() {
+    setStepActive(1);
+    document.getElementById('card2-locked').style.display = 'block';
+    document.getElementById('card2-content').style.display = 'none';
+  }
+
+  function goStep3() {
+    setStepActive(3);
+    document.getElementById('card3-locked').style.display = 'none';
+    document.getElementById('card3-content').style.display = 'block';
+    document.getElementById('show-ml').textContent  = document.getElementById('inp-ml').value.trim();
+    document.getElementById('show-rec').textContent = document.getElementById('inp-rec').value.trim();
+    document.getElementById('card3').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function backStep2() {
+    setStepActive(2);
+    document.getElementById('card3-locked').style.display = 'block';
+    document.getElementById('card3-content').style.display = 'none';
+    document.getElementById('pl2').classList.remove('done');
+    document.getElementById('ps3').classList.remove('done');
+    document.getElementById('pn3').textContent = '3';
+  }
+
+  function download() {
+    var ml  = document.getElementById('inp-ml').value.trim();
+    var rec = document.getElementById('inp-rec').value.trim();
+    var bs  = '\\';
+    var mlLua   = ml.split(bs).join(bs + bs);
+    var recLua  = rec.split(bs).join(bs + bs);
+    var logFile = ml + bs + 'wanted_log.html';
+    var logLua  = logFile.split(bs).join(bs + bs);
+    var batFile = ml + bs + 'open_log.bat';
+    var batLua  = batFile.split(bs).join(bs + bs);
+    var ps = '$f=\'' + ml + bs + 'fixedwanted.lua\';'
+           + '$c=[IO.File]::ReadAllText($f,[Text.Encoding]::UTF8);'
+           + '$c=$c -replace \'local RECORDINGS_FOLDER = \\"[^\\"]*\\"\',' + '\'' + 'local RECORDINGS_FOLDER = \\"' + recLua + '\\"\';'
+           + '$c=$c -replace \'local LOG_FILE = \\"[^\\"]*\\"\',' + '\'' + 'local LOG_FILE = \\"' + logLua + '\\"\';'
+           + '$c=$c -replace \'local BAT_FILE = \\"[^\\"]*\\"\',' + '\'' + 'local BAT_FILE = \\"' + batLua + '\\"\';'
+           + '[IO.File]::WriteAllText($f,$c,[Text.Encoding]::UTF8);';
+    var lines = [
+      '@echo off',
+      'chcp 65001 >nul',
+      'echo.',
+      'echo  [FWanted] Установка...',
+      'if not exist "' + ml + '" mkdir "' + ml + '"',
+      'echo  [1/3] Скачиваем fixedwanted.lua...',
+      'curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "' + ml + bs + 'fixedwanted.lua"',
+      'if errorlevel 1 ( echo ОШИБКА: нет интернета & pause & exit )',
+      'echo  [2/3] Прописываем пути...',
+      'powershell -NoProfile -Command "' + ps.split('"').join('\\"') + '"',
+      'echo  [3/3] Скачиваем wanted_log.html...',
+      'curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/wanted_log.html" -o "' + logFile + '"',
+      'echo start "" "' + logFile + '">"' + batFile + '"',
+      'echo.',
+      'echo  [FWanted] Готово! Скрипт: ' + ml + bs + 'fixedwanted.lua',
+      'echo  Записи: ' + rec,
+      'pause',
+      'del "%~f0"'
+    ];
+    var blob = new Blob([lines.join('\r\n')], {type:'text/plain;charset=windows-1251'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'install.bat';
+    a.click();
+    setTimeout(function() {
+      document.getElementById('card1').style.display = 'none';
+      document.getElementById('card2').style.display = 'none';
+      document.getElementById('card3').style.display = 'none';
+      document.getElementById('progress').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+    }, 800);
+  }
+
+  // Everything that touches DOM runs after page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Wire up folder picker buttons
+    document.getElementById('btn-pick-ml').addEventListener('click', function() {
+      document.getElementById('file-ml').click();
+    });
+    document.getElementById('btn-pick-rec').addEventListener('click', function() {
+      document.getElementById('file-rec').click();
+    });
+    document.getElementById('file-ml').addEventListener('change',  function() { onPickerChange('ml'); });
+    document.getElementById('file-rec').addEventListener('change', function() { onPickerChange('rec'); });
+    document.getElementById('disk-ml').addEventListener('change',  function() { rebuildPath('ml'); });
+    document.getElementById('disk-rec').addEventListener('change', function() { rebuildPath('rec'); });
+    document.getElementById('inp-ml').addEventListener('input', validate);
+    document.getElementById('inp-rec').addEventListener('input', validate2);
+
+    // Starfield
+    var cv  = document.getElementById('starfield');
+    var ctx = cv.getContext('2d');
+    var W, H;
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width  = W * devicePixelRatio; cv.height = H * devicePixelRatio;
+      cv.style.width = W + 'px'; cv.style.height = H + 'px';
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var COLORS = ['rgba(255,255,255,','rgba(255,255,255,','rgba(220,215,255,','rgba(162,155,254,','rgba(200,195,255,'];
+    var stars = [];
+    for (var si = 0; si < 200; si++) {
+      stars.push({
+        x: Math.random(), y: Math.random(),
+        r: Math.random() * 1.3 + 0.15,
+        speed: Math.random() * 0.00006 + 0.00002,
+        phase: Math.random() * Math.PI * 2,
+        freq: Math.random() * 0.02 + 0.006,
+        baseAlpha: Math.random() * 0.55 + 0.2,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+      });
+    }
+
+    var shoots = [];
+    function spawnShoot() {
+      shoots.push({
+        x: Math.random()*0.65, y: Math.random()*0.35,
+        progress: 0, len: Math.random()*0.12+0.07,
+        speed: Math.random()*0.012+0.01,
+        angle: Math.PI/5.5 + (Math.random()-0.5)*0.3
+      });
+    }
+
+    function drawStars() {
+      ctx.clearRect(0,0,W,H);
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        s.phase += s.freq;
+        var a = s.baseAlpha * (0.45 + 0.55 * Math.sin(s.phase));
+        s.y -= s.speed;
+        if (s.y < -0.01) { s.y = 1.01; s.x = Math.random(); }
+        var px = s.x*W, py = s.y*H;
+        if (s.r > 0.9) {
+          var glow = ctx.createRadialGradient(px,py,0,px,py,s.r*4);
+          glow.addColorStop(0, s.color+(a*0.25)+')');
+          glow.addColorStop(1, s.color+'0)');
+          ctx.beginPath(); ctx.arc(px,py,s.r*4,0,Math.PI*2);
+          ctx.fillStyle = glow; ctx.fill();
+        }
+        ctx.beginPath(); ctx.arc(px,py,s.r,0,Math.PI*2);
+        ctx.fillStyle = s.color+a+')'; ctx.fill();
+      }
+      for (var j = shoots.length-1; j >= 0; j--) {
+        var ss = shoots[j];
+        ss.progress += ss.speed;
+        var alpha = ss.progress < 0.5 ? ss.progress*2 : (1-ss.progress)*2;
+        var tl = Math.min(ss.progress, ss.len);
+        var hx = (ss.x+Math.cos(ss.angle)*ss.progress)*W;
+        var hy = (ss.y+Math.sin(ss.angle)*ss.progress)*H;
+        var tx = hx-Math.cos(ss.angle)*tl*W;
+        var ty = hy-Math.sin(ss.angle)*tl*H;
+        var grad = ctx.createLinearGradient(tx,ty,hx,hy);
+        grad.addColorStop(0,'rgba(255,255,255,0)');
+        grad.addColorStop(0.4,'rgba(180,170,255,'+(alpha*0.4)+')');
+        grad.addColorStop(1,'rgba(255,255,255,'+alpha+')');
+        ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(hx,hy);
+        ctx.strokeStyle = grad; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(hx,hy,1.5,0,Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,255,'+alpha+')'; ctx.fill();
+        if (ss.progress >= 1) shoots.splice(j,1);
+      }
+      if (Math.random() < 0.003) spawnShoot();
+      requestAnimationFrame(drawStars);
+    }
+    spawnShoot();
+    drawStars();
+  });
+</script>
+
 </head>
 <body>
 
@@ -493,7 +739,7 @@
       <input type="text" id="inp-ml" placeholder="\GTA San Andreas\moonloader">
       <button class="btn-pick" id="btn-pick-ml">📁 Обзор</button>
     </div>
-    <input type="file" class="hidden-picker" id="picker-ml" webkitdirectory id="file-ml">
+    <input type="file" class="hidden-picker" id="file-ml" webkitdirectory>
     <div class="field-hint">Выбери диск → нажми «Обзор» и укажи папку — путь сложится автоматически</div>
     <div class="field-hint" style="margin-top:5px;color:var(--text-dim);">Прописывать путь через <code>\</code> — пример: <code>D:\Games\rodina\moonloader</code></div>
     <div class="field-hint" style="margin-top:6px;color:var(--text-dim);">Прописывать путь через <code>\</code> — например: <code>D:\Games
@@ -539,7 +785,7 @@ odina\moonloader</code></div>
         <input type="text" id="inp-rec" placeholder="\Records">
         <button class="btn-pick" id="btn-pick-rec">📁 Обзор</button>
       </div>
-      <input type="file" class="hidden-picker" id="picker-rec" webkitdirectory id="file-rec">
+      <input type="file" class="hidden-picker" id="file-rec" webkitdirectory>
       <div class="field-hint">Выбери диск → нажми «Обзор» → путь подставится сам</div>
       <div style="display:flex;gap:10px;margin-top:1.25rem">
         <button class="btn-s" onclick="backStep1()">← Назад</button>
@@ -593,288 +839,5 @@ odina\moonloader</code></div>
   <a href="index.html" class="footer-link">fixed wanted · MoonLoader · SA:MP</a>
 
 </main>
-
-<script>
-
-  // Wire up all handlers after DOM ready
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('btn-pick-ml').addEventListener('click', function() {
-      document.getElementById('file-ml').click();
-    });
-    document.getElementById('btn-pick-rec').addEventListener('click', function() {
-      document.getElementById('file-rec').click();
-    });
-    document.getElementById('file-ml').addEventListener('change', function() { onPickerChange('ml'); });
-    document.getElementById('file-rec').addEventListener('change', function() { onPickerChange('rec'); });
-    document.getElementById('disk-ml').addEventListener('change', function() { rebuildPath('ml'); });
-    document.getElementById('disk-rec').addEventListener('change', function() { rebuildPath('rec'); });
-    document.getElementById('inp-ml').addEventListener('input', validate);
-    document.getElementById('inp-rec').addEventListener('input', validate2);
-  });
-
-  // Folder picker
-  function openPicker(field) {
-    document.getElementById('picker-' + field).click();
-  }
-
-  function rebuildPath(field) {
-    // When disk changes, update the full path in the text input
-    var disk = document.getElementById('disk-' + field).value;
-    var inp  = document.getElementById('inp-' + field);
-    var cur  = inp.value.trim();
-    // Strip existing disk prefix if present (e.g. "D:")
-    cur = cur.replace(/^[A-Za-z]:/, '');
-    if (!cur.startsWith('\')) cur = '\' + cur;
-    inp.value = disk + cur;
-    if (field === 'ml') validate();
-    else validate2();
-  }
-
-  function onPickerChange(field) {
-    var picker = document.getElementById('picker-' + field);
-    var files  = picker.files;
-    if (!files || files.length === 0) return;
-
-    // webkitRelativePath = "folderName/sub/file" — first segment is folder name
-    var firstPath  = files[0].webkitRelativePath || '';
-    var folderName = firstPath.split('/')[0] || '';
-    if (!folderName) return;
-
-    var disk = document.getElementById('disk-' + field).value;
-    var inp  = document.getElementById('inp-' + field);
-
-    // Build full path: disk + backslash + folderName
-    inp.value = disk + '\' + folderName;
-
-    if (field === 'ml') validate();
-    else validate2();
-
-    picker.value = '';
-  }
-
-  // Starfield
-  const cv = document.getElementById('starfield');
-  const ctx = cv.getContext('2d');
-  let W, H;
-  function resize() {
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * devicePixelRatio; cv.height = H * devicePixelRatio;
-    cv.style.width = W + 'px'; cv.style.height = H + 'px';
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-  }
-  resize();
-  window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
-
-  const COLORS = [
-    'rgba(255,255,255,', 'rgba(255,255,255,', 'rgba(220,215,255,',
-    'rgba(162,155,254,', 'rgba(200,195,255,'
-  ];
-
-  const stars = Array.from({length: 200}, () => ({
-    x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.3 + 0.15,
-    speed: Math.random() * 0.00006 + 0.00002,
-    phase: Math.random() * Math.PI * 2,
-    freq: Math.random() * 0.02 + 0.006,
-    baseAlpha: Math.random() * 0.55 + 0.2,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)]
-  }));
-
-  const shoots = [];
-  function spawnShoot() {
-    shoots.push({
-      x: Math.random() * 0.65, y: Math.random() * 0.35,
-      progress: 0, len: Math.random() * 0.12 + 0.07,
-      speed: Math.random() * 0.012 + 0.01,
-      angle: Math.PI / 5.5 + (Math.random() - 0.5) * 0.3
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    for (const s of stars) {
-      s.phase += s.freq;
-      const a = s.baseAlpha * (0.45 + 0.55 * Math.sin(s.phase));
-      s.y -= s.speed;
-      if (s.y < -0.01) { s.y = 1.01; s.x = Math.random(); }
-      const px = s.x * W, py = s.y * H;
-      if (s.r > 0.9) {
-        const glow = ctx.createRadialGradient(px, py, 0, px, py, s.r * 4);
-        glow.addColorStop(0, s.color + (a * 0.25) + ')');
-        glow.addColorStop(1, s.color + '0)');
-        ctx.beginPath(); ctx.arc(px, py, s.r * 4, 0, Math.PI * 2);
-        ctx.fillStyle = glow; ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(px, py, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = s.color + a + ')'; ctx.fill();
-    }
-    for (let i = shoots.length - 1; i >= 0; i--) {
-      const ss = shoots[i];
-      ss.progress += ss.speed;
-      const alpha = ss.progress < 0.5 ? ss.progress * 2 : (1 - ss.progress) * 2;
-      const tailLen = Math.min(ss.progress, ss.len);
-      const hx = (ss.x + Math.cos(ss.angle) * ss.progress) * W;
-      const hy = (ss.y + Math.sin(ss.angle) * ss.progress) * H;
-      const tx = hx - Math.cos(ss.angle) * tailLen * W;
-      const ty = hy - Math.sin(ss.angle) * tailLen * H;
-      const grad = ctx.createLinearGradient(tx, ty, hx, hy);
-      grad.addColorStop(0, `rgba(255,255,255,0)`);
-      grad.addColorStop(0.4, `rgba(180,170,255,${alpha * 0.4})`);
-      grad.addColorStop(1, `rgba(255,255,255,${alpha})`);
-      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy);
-      ctx.strokeStyle = grad; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.beginPath(); ctx.arc(hx, hy, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
-      if (ss.progress >= 1) shoots.splice(i, 1);
-    }
-    if (Math.random() < 0.003) spawnShoot();
-    requestAnimationFrame(draw);
-  }
-  spawnShoot(); draw();
-
-  function getUser() { return '%USERNAME%'; }
-
-  function setPick(field, val) {
-    if (field === 'ml') {
-      document.getElementById('inp-ml').value = val;
-      validate();
-    } else {
-      document.getElementById('inp-rec').value = val;
-      validate2();
-    }
-  }
-
-  function validate() {
-    const v = document.getElementById('inp-ml').value.trim();
-    const ok = v.length > 3;
-    document.getElementById('btn1').disabled = !ok;
-    document.getElementById('inp-ml').classList.toggle('valid', ok);
-  }
-
-  function validate2() {
-    const v = document.getElementById('inp-rec').value.trim();
-    const ok = v.length > 3;
-    document.getElementById('btn2').disabled = !ok;
-    document.getElementById('inp-rec').classList.toggle('valid', ok);
-  }
-
-  function setStepActive(n) {
-    for (let i = 1; i <= 3; i++) {
-      const ps = document.getElementById('ps'+i);
-      const card = document.getElementById('card'+i);
-      ps.classList.remove('active','done');
-      card.classList.remove('active','done-card','locked');
-      if (i < n) {
-        ps.classList.add('done');
-        document.getElementById('pn'+i).textContent = '✓';
-        card.classList.add('done-card');
-        document.getElementById('pl'+(i)).classList.add('done');
-      } else if (i === n) {
-        ps.classList.add('active');
-        card.classList.add('active');
-        if (i > 1) document.getElementById('pl'+(i-1)).classList.add('done');
-      } else {
-        card.classList.add('locked');
-      }
-    }
-  }
-
-  function goStep2() {
-    setStepActive(2);
-    document.getElementById('card2-locked').style.display = 'none';
-    document.getElementById('card2-content').style.display = 'block';
-    document.getElementById('card2').scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  function backStep1() {
-    setStepActive(1);
-    document.getElementById('card2-locked').style.display = 'block';
-    document.getElementById('card2-content').style.display = 'none';
-  }
-
-  function goStep3() {
-    setStepActive(3);
-    document.getElementById('card3-locked').style.display = 'none';
-    document.getElementById('card3-content').style.display = 'block';
-    document.getElementById('show-ml').textContent = document.getElementById('inp-ml').value.trim();
-    document.getElementById('show-rec').textContent = document.getElementById('inp-rec').value.trim();
-    document.getElementById('card3').scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  function backStep2() {
-    setStepActive(2);
-    document.getElementById('card3-locked').style.display = 'block';
-    document.getElementById('card3-content').style.display = 'none';
-    document.getElementById('pl2').classList.remove('done');
-    document.getElementById('ps3').classList.remove('done');
-    document.getElementById('pn3').textContent = '3';
-  }
-
-  function download() {
-    const ml  = document.getElementById('inp-ml').value.trim();
-    const rec = document.getElementById('inp-rec').value.trim();
-
-    // Lua строки — двойные слэши
-    const mlLua  = ml.replace(/\\/g, '\\\\');
-    const recLua = rec.replace(/\\/g, '\\\\');
-    const logFile = ml + '\\wanted_log.html';
-    const logLua  = logFile.replace(/\\/g, '\\\\');
-    const batFile = ml + '\\open_log.bat';
-    const batLua  = batFile.replace(/\\/g, '\\\\');
-
-    // PowerShell команда для патча путей в lua файле
-    const psCmd = [
-      `$f = '${ml}\\fixedwanted.lua';`,
-      `$c = [IO.File]::ReadAllText($f, [Text.Encoding]::UTF8);`,
-      `$c = $c -replace 'local RECORDINGS_FOLDER = \\"[^\\"]*\\"', 'local RECORDINGS_FOLDER = \\"${recLua}\\"';`,
-      `$c = $c -replace 'local LOG_FILE = \\"[^\\"]*\\"', 'local LOG_FILE = \\"${logLua}\\"';`,
-      `$c = $c -replace 'local BAT_FILE = \\"[^\\"]*\\"', 'local BAT_FILE = \\"${batLua}\\"';`,
-      `[IO.File]::WriteAllText($f, $c, [Text.Encoding]::UTF8);`
-    ].join(' ');
-
-    const logLine = `start "" "${ml}\\wanted_log.html"`;
-
-    const bat = [
-      '@echo off',
-      'chcp 65001 >nul',
-      'echo.',
-      'echo  [FWanted] Установка скрипта...',
-      'echo.',
-      `if not exist "${ml}" mkdir "${ml}"`,
-      'echo  [1/3] Скачиваем fixedwanted.lua...',
-      `curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "${ml}\\fixedwanted.lua"`,
-      'if errorlevel 1 ( echo  ОШИБКА: нет интернета. & pause & exit )',
-      'echo  [2/3] Прописываем пути...',
-      `powershell -NoProfile -Command "${psCmd.replace(/"/g, '\\"')}"`,
-      'echo  [3/3] Скачиваем wanted_log.html...',
-      `curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/wanted_log.html" -o "${logFile}"`,
-      `echo ${logLine}> "${batFile}"`,
-      'echo.',
-      'echo  [FWanted] Готово!',
-      `echo  Скрипт: ${ml}\\fixedwanted.lua`,
-      `echo  Лог:    ${logFile}`,
-      `echo  Записи: ${rec}`,
-      'echo.',
-      'echo  Запусти GTA San Andreas — в чате появится: [FWanted] Скрипт загружен!',
-      'echo.',
-      'pause',
-      'del "%~f0"'
-    ].join('\n');
-
-    const blob = new Blob([bat], { type: 'text/plain;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'install.bat';
-    a.click();
-
-    setTimeout(() => {
-      document.getElementById('card1').style.display = 'none';
-      document.getElementById('card2').style.display = 'none';
-      document.getElementById('card3').style.display = 'none';
-      document.getElementById('progress').style.display = 'none';
-      document.getElementById('success').style.display = 'block';
-    }, 800);
-  }
-</script>
-</body>
+/body>
 </html>
