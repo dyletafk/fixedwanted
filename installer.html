@@ -454,28 +454,41 @@
     var luaPath = ml  + bs + 'fixedwanted.lua';
     var logFile = ml  + bs + 'wanted_log.html';
     var batFile = ml  + bs + 'open_log.bat';
-    var ps1File = ml  + bs + '_fw_setup.ps1';
 
-    // Lua needs double backslash inside string literals
-    var recLua = rec.split(bs).join(bs + bs);
-    var logLua = logFile.split(bs).join(bs + bs);
-    var batLua = batFile.split(bs).join(bs + bs);
+    // escape single quotes for PowerShell single-quoted strings
+    var recPS  = rec.split("'").join("''");
+    var logPS  = logFile.split("'").join("''");
+    var batPS  = batFile.split("'").join("''");
+    var luaPS  = luaPath.split("'").join("''");
 
-    // Build the .ps1 file content as separate lines
-    // Each line will be written via a separate "echo LINE >> file" command
-    var ps1 = [
-      '$f = "' + luaPath + '"',
-      '$lines = Get-Content -Path $f -Encoding UTF8',
-      '$result = foreach ($line in $lines) {',
-      '    if ($line -match "^local RECORDINGS_FOLDER") { "local RECORDINGS_FOLDER = \\\"' + recLua + '\\\"" }',
-      '    elseif ($line -match "^local LOG_FILE") { "local LOG_FILE          = \\\"' + logLua + '\\\"" }',
-      '    elseif ($line -match "^local BAT_FILE") { "local BAT_FILE          = \\\"' + batLua + '\\\"" }',
-      '    else { $line }',
-      '}',
-      '[System.IO.File]::WriteAllLines($f, $result, [System.Text.Encoding]::UTF8)'
-    ];
+    // PS1 uses -match with '^local RECORDINGS_FOLDER' (no spaces after — covers aligned variants)
+    // Replacement uses exact format from the lua file with spaces alignment
+    var ps1Content = [
+      "$f = '" + luaPS + "'",
+      "$lines = Get-Content -Path $f -Encoding UTF8",
+      "$result = foreach ($line in $lines) {",
+      "    if     ($line -match '^local RECORDINGS_FOLDER') { 'local RECORDINGS_FOLDER = \"" + recPS + "\"' }",
+      "    elseif ($line -match '^local LOG_FILE')          { 'local LOG_FILE          = \"" + logPS + "\"' }",
+      "    elseif ($line -match '^local BAT_FILE')          { 'local BAT_FILE          = \"" + batPS + "\"' }",
+      "    else { $line }",
+      "}",
+      "$text = ($result -join \"\n\"); [System.IO.File]::WriteAllText($f, ($text + \"\n\"), [System.Text.Encoding]::UTF8)"
+    ].join('\n');
 
-    // Build bat lines array
+    function toBase64UTF16LE(str) {
+      var bytes = [];
+      for (var i = 0; i < str.length; i++) {
+        var code = str.charCodeAt(i);
+        bytes.push(code & 0xff);
+        bytes.push((code >> 8) & 0xff);
+      }
+      var bin = '';
+      for (var j = 0; j < bytes.length; j++) bin += String.fromCharCode(bytes[j]);
+      return btoa(bin);
+    }
+
+    var encoded = toBase64UTF16LE(ps1Content);
+
     var bat = [];
     bat.push('@echo off');
     bat.push('chcp 65001 >nul');
@@ -484,34 +497,18 @@
     bat.push('echo  Fixed Wanted - Установка скрипта');
     bat.push('echo ============================================');
     bat.push('echo.');
-
-    // Step 1: create folder if needed
     bat.push('echo [1/4] Создаём папку...');
     bat.push('if not exist "' + ml + '" mkdir "' + ml + '"');
-
-    // Step 2: download lua
     bat.push('echo [2/4] Скачиваем fixedwanted.lua...');
     bat.push('curl -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "' + luaPath + '"');
-    bat.push('if errorlevel 1 ( echo ОШИБКА: не удалось скачать скрипт. Проверь интернет. & goto :error )');
-
-    // Step 3: write ps1 and patch paths
-    bat.push('echo [3/4] Прописываем твои пути в скрипт...');
-    // Write ps1 file line by line using >> redirect
-    bat.push('if exist "' + ps1File + '" del "' + ps1File + '"');
-    for (var i = 0; i < ps1.length; i++) {
-      bat.push('echo ' + ps1[i] + '>> "' + ps1File + '"');
-    }
-    bat.push('powershell -NoProfile -ExecutionPolicy Bypass -File "' + ps1File + '"');
-    bat.push('if exist "' + ps1File + '" del "' + ps1File + '"');
-
-    // Step 4: download wanted_log.html
+    bat.push('if errorlevel 1 ( echo ОШИБКА: нет интернета & goto :error )');
+    bat.push('echo [3/4] Прописываем пути...');
+    bat.push('powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + encoded);
+    bat.push('if errorlevel 1 ( echo ОШИБКА: не удалось прописать пути & goto :error )');
     bat.push('echo [4/4] Скачиваем wanted_log.html...');
     bat.push('curl -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/wanted_log.html" -o "' + logFile + '"');
-    bat.push('if errorlevel 1 ( echo ОШИБКА: не удалось скачать лог файл. & goto :error )');
-
-    // Create open_log.bat
+    bat.push('if errorlevel 1 ( echo ОШИБКА: не удалось скачать лог & goto :error )');
     bat.push('echo start "" "' + logFile + '">"' + batFile + '"');
-
     bat.push('echo.');
     bat.push('echo ============================================');
     bat.push('echo  Готово!');
@@ -520,7 +517,7 @@
     bat.push('echo  Записи:  ' + rec);
     bat.push('echo ============================================');
     bat.push('echo.');
-    bat.push('echo  Запусти GTA San Andreas и зайди в игру.');
+    bat.push('echo  Запусти GTA San Andreas.');
     bat.push('echo  В чате появится: [FWanted] Скрипт загружен!');
     bat.push('echo.');
     bat.push('pause');
@@ -529,7 +526,7 @@
     bat.push('');
     bat.push(':error');
     bat.push('echo.');
-    bat.push('echo  Установка не завершена. Нажми любую клавишу.');
+    bat.push('echo  Установка не завершена.');
     bat.push('pause');
     bat.push('exit /b 1');
 
