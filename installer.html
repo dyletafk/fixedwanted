@@ -709,7 +709,7 @@
   </div>
 
   <!-- STEP 2 -->
-  <div class="step-card locked" id="card2">
+<div class="step-card locked" id="card2">
     <div class="step-header">
       <div class="step-icon" id="si2">2</div>
       <div>
@@ -725,16 +725,16 @@
         Куда сохраняются записи экрана. Скрипт откроет эту папку по команде <code>/swrec</code>.
       </p>
       <div class="quick-picks">
-        <div class="pick" onclick="setPick('rec','D:\\Records')">D:\Records</div>
-        <div class="pick" onclick="setPick('rec','D:\\Videos')">D:\Videos</div>
+        <div class="pick" onclick="setPick('rec','D:\\Records')">D:\\Records</div>
+        <div class="pick" onclick="setPick('rec','D:\\Videos')">D:\\Videos</div>
         <div class="pick" onclick="setPick('rec','C:\\Users\\'+getUser()+'\\Videos')">Мои видео</div>
         <div class="pick" onclick="setPick('rec','C:\\Users\\'+getUser()+'\\Desktop')">Рабочий стол</div>
       </div>
       <label class="field-label" for="inp-rec">
         Папка записей<span class="field-required">*</span>
       </label>
-      <input type="text" id="inp-rec" placeholder="\Records">
-      <div class="field-hint">Вводи полный путь вручную, например: <code>D:\Records</code></div>
+      <input type="text" id="inp-rec" placeholder="D:\\Records">
+      <div class="field-hint">Вводи полный путь вручную, например: <code>D:\\Records</code></div>
       <div style="display:flex;gap:10px;margin-top:1.25rem">
         <button class="btn-s" onclick="backStep1()">← Назад</button>
         <button class="btn-p" id="btn2" onclick="goStep3()" disabled>Далее →</button>
