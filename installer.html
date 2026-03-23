@@ -360,62 +360,6 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-
-
-  /* FOLDER PICKER */
-  .disk-select {
-    appearance: none;
-    -webkit-appearance: none;
-    background: rgba(108,92,231,0.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a29bfe'/%3E%3C/svg%3E") no-repeat right 10px center;
-    border: 1px solid var(--border-a);
-    color: var(--accent2);
-    padding: 0 32px 0 14px;
-    border-radius: var(--radius-sm);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    height: 44px;
-    min-width: 68px;
-    outline: none;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .disk-select:hover, .disk-select:focus {
-    background-color: rgba(108,92,231,0.18);
-    border-color: rgba(108,92,231,0.4);
-  }
-  .field-row {
-    display: flex;
-    gap: 8px;
-    align-items: stretch;
-  }
-  .field-row input[type="text"] {
-    flex: 1;
-  }
-  .btn-pick {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(108,92,231,0.1);
-    border: 1px solid var(--border-a);
-    color: var(--accent2);
-    padding: 0 16px;
-    border-radius: var(--radius-sm);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.2s, border-color 0.2s;
-    height: 44px;
-  }
-  .btn-pick:hover {
-    background: rgba(108,92,231,0.18);
-    border-color: rgba(108,92,231,0.4);
-  }
-  input[type="file"].hidden-picker {
-    display: none;
-  }
   @media (max-width: 600px) {
     nav { padding: 0 1.2rem; }
     main { padding: 90px 1.2rem 4rem; }
@@ -446,25 +390,9 @@
     document.getElementById('inp-rec').classList.toggle('valid', ok);
   }
 
-  function rebuildPath(field) {
-    var disk = document.getElementById('disk-' + field).value;
-    var inp  = document.getElementById('inp-' + field);
-    var cur  = inp.value.trim().replace(/^[A-Za-z]:/, '');
-    if (!cur || cur.charAt(0) !== '\\') cur = '\\' + cur;
-    inp.value = disk + cur;
-    if (field === 'ml') validate(); else validate2();
-  }
 
-  function onPickerChange(field) {
-    var picker = document.getElementById('file-' + field);
-    if (!picker || !picker.files || picker.files.length === 0) return;
-    var folderName = (picker.files[0].webkitRelativePath || '').split('/')[0] || '';
-    if (!folderName) return;
-    var disk = document.getElementById('disk-' + field).value;
-    document.getElementById('inp-' + field).value = disk + '\\' + folderName;
-    if (field === 'ml') validate(); else validate2();
-    picker.value = '';
-  }
+
+
 
   function setStepActive(n) {
     for (var i = 1; i <= 3; i++) {
@@ -522,39 +450,58 @@
     var ml  = document.getElementById('inp-ml').value.trim();
     var rec = document.getElementById('inp-rec').value.trim();
     var bs  = '\\';
-    var mlLua   = ml.split(bs).join(bs + bs);
-    var recLua  = rec.split(bs).join(bs + bs);
-    var logFile = ml + bs + 'wanted_log.html';
-    var logLua  = logFile.split(bs).join(bs + bs);
-    var batFile = ml + bs + 'open_log.bat';
-    var batLua  = batFile.split(bs).join(bs + bs);
-    var ps = '$f=\'' + ml + bs + 'fixedwanted.lua\';'
-           + '$c=[IO.File]::ReadAllText($f,[Text.Encoding]::UTF8);'
-           + '$c=$c -replace \'local RECORDINGS_FOLDER = \\"[^\\"]*\\"\',' + '\'' + 'local RECORDINGS_FOLDER = \\"' + recLua + '\\"\';'
-           + '$c=$c -replace \'local LOG_FILE = \\"[^\\"]*\\"\',' + '\'' + 'local LOG_FILE = \\"' + logLua + '\\"\';'
-           + '$c=$c -replace \'local BAT_FILE = \\"[^\\"]*\\"\',' + '\'' + 'local BAT_FILE = \\"' + batLua + '\\"\';'
-           + '[IO.File]::WriteAllText($f,$c,[Text.Encoding]::UTF8);';
-    var lines = [
+
+    var luaPath = ml  + bs + 'fixedwanted.lua';
+    var logFile = ml  + bs + 'wanted_log.html';
+    var batFile = ml  + bs + 'open_log.bat';
+    var ps1File = ml  + bs + '_fw_setup.ps1';
+
+    // Double backslash for Lua string literals
+    var recLua = rec.split(bs).join(bs + bs);
+    var logLua = logFile.split(bs).join(bs + bs);
+    var batLua = batFile.split(bs).join(bs + bs);
+
+    // PS1 script — written to disk first, then executed
+    // Uses simple line-by-line replacement, no regex
+    var ps1Lines = [
+      '$f = "' + luaPath + '"',
+      '$lines = Get-Content $f -Encoding UTF8',
+      '$out = $lines | ForEach-Object {',
+      '  if ($_ -match "^local RECORDINGS_FOLDER") { ' + "'local RECORDINGS_FOLDER = " + '"' + recLua + '"' + "'" + ' }',
+      '  elseif ($_ -match "^local LOG_FILE") { ' + "'local LOG_FILE = " + '"' + logLua + '"' + "'" + ' }',
+      '  elseif ($_ -match "^local BAT_FILE") { ' + "'local BAT_FILE = " + '"' + batLua + '"' + "'" + ' }',
+      '  else { $_ }',
+      '}',
+      '$out | Set-Content $f -Encoding UTF8',
+      'Remove-Item $MyInvocation.MyCommand.Path'
+    ];
+
+    var batLines = [
       '@echo off',
       'chcp 65001 >nul',
       'echo.',
       'echo  [FWanted] Установка...',
       'if not exist "' + ml + '" mkdir "' + ml + '"',
       'echo  [1/3] Скачиваем fixedwanted.lua...',
-      'curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "' + ml + bs + 'fixedwanted.lua"',
+      'curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "' + luaPath + '"',
       'if errorlevel 1 ( echo ОШИБКА: нет интернета & pause & exit )',
       'echo  [2/3] Прописываем пути...',
-      'powershell -NoProfile -Command "' + ps.split('"').join('\\"') + '"',
+      '(',
+      ps1Lines.map(function(l){ return 'echo ' + l; }).join('\r\n'),
+      ') > "' + ps1File + '"',
+      'powershell -NoProfile -ExecutionPolicy Bypass -File "' + ps1File + '"',
       'echo  [3/3] Скачиваем wanted_log.html...',
       'curl -s -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/wanted_log.html" -o "' + logFile + '"',
       'echo start "" "' + logFile + '">"' + batFile + '"',
       'echo.',
-      'echo  [FWanted] Готово! Скрипт: ' + ml + bs + 'fixedwanted.lua',
+      'echo  [FWanted] Готово!',
+      'echo  Скрипт: ' + luaPath,
       'echo  Записи: ' + rec,
       'pause',
       'del "%~f0"'
     ];
-    var blob = new Blob([lines.join('\r\n')], {type:'text/plain;charset=windows-1251'});
+
+    var blob = new Blob([batLines.join('\r\n')], {type: 'text/plain;charset=windows-1251'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'install.bat';
@@ -570,17 +517,6 @@
 
   // Everything that touches DOM runs after page loads
   document.addEventListener('DOMContentLoaded', function() {
-    // Wire up folder picker buttons
-    document.getElementById('btn-pick-ml').addEventListener('click', function() {
-      document.getElementById('file-ml').click();
-    });
-    document.getElementById('btn-pick-rec').addEventListener('click', function() {
-      document.getElementById('file-rec').click();
-    });
-    document.getElementById('file-ml').addEventListener('change',  function() { onPickerChange('ml'); });
-    document.getElementById('file-rec').addEventListener('change', function() { onPickerChange('rec'); });
-    document.getElementById('disk-ml').addEventListener('change',  function() { rebuildPath('ml'); });
-    document.getElementById('disk-rec').addEventListener('change', function() { rebuildPath('rec'); });
     document.getElementById('inp-ml').addEventListener('input', validate);
     document.getElementById('inp-rec').addEventListener('input', validate2);
 
@@ -729,22 +665,9 @@
     <label class="field-label" for="inp-ml">
       Путь до moonloader<span class="field-required">*</span>
     </label>
-    <div class="field-row">
-      <select class="disk-select" id="disk-ml">
-        <option>C:</option>
-        <option selected>D:</option>
-        <option>E:</option>
-        <option>F:</option>
-      </select>
-      <input type="text" id="inp-ml" placeholder="\GTA San Andreas\moonloader">
-      <button class="btn-pick" id="btn-pick-ml">📁 Обзор</button>
-    </div>
-    <input type="file" class="hidden-picker" id="file-ml" webkitdirectory>
-    <div class="field-hint">Выбери диск → нажми «Обзор» и укажи папку — путь сложится автоматически</div>
-    <div class="field-hint" style="margin-top:5px;color:var(--text-dim);">Прописывать путь через <code>\</code> — пример: <code>D:\Games\rodina\moonloader</code></div>
-    <div class="field-hint" style="margin-top:6px;color:var(--text-dim);">Прописывать путь через <code>\</code> — например: <code>D:\Games
-odina\moonloader</code></div>
-    <br>
+    <input type="text" id="inp-ml" placeholder="D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader">
+    <div class="field-hint">Вводи полный путь — например: <code>D:\Games\Arizona Games Launcher\bin\rodina\moonloader</code></div>
+    <div class="field-hint" style="margin-top:4px;color:var(--text-dim);">Разделитель — обратный слэш <code>\</code></div>
     <div style="display:flex;gap:10px;margin-top:1rem">
       <button class="btn-p" id="btn1" onclick="goStep2()" disabled>Далее →</button>
     </div>
@@ -775,18 +698,8 @@ odina\moonloader</code></div>
       <label class="field-label" for="inp-rec">
         Папка записей<span class="field-required">*</span>
       </label>
-      <div class="field-row">
-        <select class="disk-select" id="disk-rec">
-          <option>C:</option>
-          <option selected>D:</option>
-          <option>E:</option>
-          <option>F:</option>
-        </select>
-        <input type="text" id="inp-rec" placeholder="\Records">
-        <button class="btn-pick" id="btn-pick-rec">📁 Обзор</button>
-      </div>
-      <input type="file" class="hidden-picker" id="file-rec" webkitdirectory>
-      <div class="field-hint">Выбери диск → нажми «Обзор» → путь подставится сам</div>
+      <input type="text" id="inp-rec" placeholder="\Records">
+      <div class="field-hint">Вводи полный путь вручную, например: <code>D:\Records</code></div>
       <div style="display:flex;gap:10px;margin-top:1.25rem">
         <button class="btn-s" onclick="backStep1()">← Назад</button>
         <button class="btn-p" id="btn2" onclick="goStep3()" disabled>Далее →</button>
