@@ -36,7 +36,6 @@
     overflow-x: hidden;
   }
 
-  /* PARTICLES */
   #starfield {
     position: fixed;
     inset: 0;
@@ -51,7 +50,6 @@
   .orb1 { width: 500px; height: 500px; background: rgba(108,92,231,0.07); top: -150px; left: -150px; }
   .orb2 { width: 350px; height: 350px; background: rgba(162,155,254,0.05); bottom: 50px; right: -80px; }
 
-  /* NAV */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
@@ -79,14 +77,12 @@
   }
   .nav-back:hover { color: #fff; }
 
-  /* MAIN */
   main {
     position: relative; z-index: 1;
     max-width: 680px; margin: 0 auto;
     padding: 100px 2rem 5rem;
   }
 
-  /* HEADER */
   .page-badge {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(108,92,231,0.1); border: 1px solid var(--border-a);
@@ -113,7 +109,6 @@
     animation: fadeUp 0.6s 0.1s ease both;
   }
 
-  /* PROGRESS STEPS */
   .progress {
     display: flex; align-items: center; gap: 0;
     margin-bottom: 2.5rem;
@@ -157,7 +152,6 @@
   }
   .prog-line.done { background: rgba(76,175,125,0.3); }
 
-  /* STEP CARDS */
   .step-card {
     background: var(--bg2);
     border: 1px solid var(--border2);
@@ -210,7 +204,6 @@
     padding: 1px 6px; border-radius: 4px; font-size: 0.8rem;
   }
 
-  /* QUICK PICKS */
   .quick-picks {
     display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem;
   }
@@ -224,7 +217,6 @@
   }
   .pick:hover { border-color: var(--border-a); color: var(--accent2); }
 
-  /* INPUT */
   .field-wrap { position: relative; }
 
   .field-label {
@@ -266,7 +258,6 @@
     padding: 1px 5px; border-radius: 3px; font-size: 0.75rem;
   }
 
-  /* STEP 3 — INSTALL */
   .install-info {
     background: rgba(108,92,231,0.06);
     border: 1px solid var(--border-a);
@@ -290,13 +281,11 @@
     font-size: 0.82rem; color: rgba(255,196,60,0.8);
   }
 
-  /* LOCKED PLACEHOLDER */
   .locked-msg {
     font-size: 0.875rem; color: var(--text-dim);
     font-style: italic;
   }
 
-  /* BUTTONS */
   .btn-p {
     display: inline-flex; align-items: center; gap: 8px;
     background: var(--accent-g); color: #fff;
@@ -319,7 +308,6 @@
   }
   .btn-s:hover { border-color: var(--border-a); color: #fff; }
 
-  /* SUCCESS STATE */
   .success-card {
     background: rgba(76,175,125,0.06);
     border: 1px solid rgba(76,175,125,0.25);
@@ -368,7 +356,6 @@
 </style>
 
 <script>
-  // All functions declared globally so onclick= works
   function getUser() { return '%USERNAME%'; }
 
   function setPick(field, val) {
@@ -389,10 +376,6 @@
     document.getElementById('btn2').disabled = !ok;
     document.getElementById('inp-rec').classList.toggle('valid', ok);
   }
-
-
-
-
 
   function setStepActive(n) {
     for (var i = 1; i <= 3; i++) {
@@ -455,14 +438,11 @@
     var logFile = ml  + bs + 'wanted_log.html';
     var batFile = ml  + bs + 'open_log.bat';
 
-    // escape single quotes for PowerShell single-quoted strings
     var recPS  = rec.split("'").join("''");
     var logPS  = logFile.split("'").join("''");
     var batPS  = batFile.split("'").join("''");
     var luaPS  = luaPath.split("'").join("''");
 
-    // PS1 uses -match with '^local RECORDINGS_FOLDER' (no spaces after — covers aligned variants)
-    // Replacement uses exact format from the lua file with spaces alignment
     var ps1Content = [
       "$f = '" + luaPS + "'",
       "$lines = Get-Content -Path $f -Encoding UTF8",
@@ -493,15 +473,6 @@
     bat.push('@echo off');
     bat.push('chcp 65001 >nul');
     bat.push('echo.');
-    bat.push('  ______ _              _  __          __         _           _   _                 _       _      _   
- |  ____(_)            | | \ \        / /        | |         | | | |               | |     | |    | |  
- | |__   ___  _____  __| |  \ \  /\  / /_ _ _ __ | |_ ___  __| | | |__  _   _    __| |_   _| | ___| |_ 
- |  __| | \ \/ / _ \/ _` |   \ \/  \/ / _` | '_ \| __/ _ \/ _` | | '_ \| | | |  / _` | | | | |/ _ \ __|
- | |    | |>  <  __/ (_| |    \  /\  / (_| | | | | ||  __/ (_| | | |_) | |_| | | (_| | |_| | |  __/ |_ 
- |_|    |_/_/\_\___|\__,_|     \/  \/ \__,_|_| |_|\__\___|\__,_| |_.__/ \__, |  \__,_|\__, |_|\___|\__|
-                                                                         __/ |         __/ |           
-                                                                        |___/         |___/            ');
-
     bat.push('echo [1/4] Создаём папку...');
     bat.push('if not exist "' + ml + '" mkdir "' + ml + '"');
     bat.push('echo [2/4] Скачиваем fixedwanted.lua...');
@@ -550,12 +521,10 @@
     }, 800);
   }
 
-  // Everything that touches DOM runs after page loads
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('inp-ml').addEventListener('input', validate);
     document.getElementById('inp-rec').addEventListener('input', validate2);
 
-    // Starfield
     var cv  = document.getElementById('starfield');
     var ctx = cv.getContext('2d');
     var W, H;
@@ -646,7 +615,6 @@
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
-<!-- NAV -->
 <nav>
   <a href="index.html" class="nav-logo">
     <div class="nav-logo-mark">FW</div>
@@ -657,12 +625,10 @@
 
 <main>
 
-  <!-- HEADER -->
   <div class="page-badge"><span class="bdot"></span> Установщик · fixedwanted.lua</div>
   <h1 class="page-title">Настройка <span>путей</span></h1>
   <p class="page-sub">Укажи свои папки — скрипт будет настроен автоматически. Никаких чужих данных внутри.</p>
 
-  <!-- PROGRESS -->
   <div class="progress" id="progress">
     <div class="prog-step active" id="ps1">
       <div class="prog-num" id="pn1">1</div>
@@ -694,22 +660,21 @@
       Туда будет помещён скрипт.
     </p>
     <div class="quick-picks">
-      <div class="pick" onclick="setPick('ml','D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader')">D: Arizona Launcher</div>
-      <div class="pick" onclick="setPick('ml','C:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader')">C: Arizona Launcher</div>
+      <div class="pick" onclick="setPick('ml','D:\\\\Games\\\\Arizona Games Launcher\\\\bin\\\\rodina\\\\moonloader')">D: Arizona Launcher</div>
+      <div class="pick" onclick="setPick('ml','C:\\\\Games\\\\Arizona Games Launcher\\\\bin\\\\rodina\\\\moonloader')">C: Arizona Launcher</div>
     </div>
     <label class="field-label" for="inp-ml">
       Путь до moonloader<span class="field-required">*</span>
     </label>
-    <input type="text" id="inp-ml" placeholder="D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader">
-    <div class="field-hint">Вводи полный путь — например: <code>D:\\Games\\Arizona Games Launcher\\bin\\rodina\\moonloader</code></div>
-    <div class="field-hint" style="margin-top:4px;color:var(--text-dim);">Разделитель — два обратных слэша <code>\\</code></div>
+    <input type="text" id="inp-ml" placeholder="D:\Games\Arizona Games Launcher\bin\rodina\moonloader">
+    <div class="field-hint">Например: <code>D:\Games\Arizona Games Launcher\bin\rodina\moonloader</code></div>
     <div style="display:flex;gap:10px;margin-top:1rem">
       <button class="btn-p" id="btn1" onclick="goStep2()" disabled>Далее →</button>
     </div>
   </div>
 
   <!-- STEP 2 -->
-<div class="step-card locked" id="card2">
+  <div class="step-card locked" id="card2">
     <div class="step-header">
       <div class="step-icon" id="si2">2</div>
       <div>
@@ -725,16 +690,16 @@
         Куда сохраняются записи экрана. Скрипт откроет эту папку по команде <code>/swrec</code>.
       </p>
       <div class="quick-picks">
-        <div class="pick" onclick="setPick('rec','D:\\Records')">D:\\Records</div>
-        <div class="pick" onclick="setPick('rec','D:\\Videos')">D:\\Videos</div>
-        <div class="pick" onclick="setPick('rec','C:\\Users\\'+getUser()+'\\Videos')">Мои видео</div>
-        <div class="pick" onclick="setPick('rec','C:\\Users\\'+getUser()+'\\Desktop')">Рабочий стол</div>
+        <div class="pick" onclick="setPick('rec','D:\\\\Records')">D:\\Records</div>
+        <div class="pick" onclick="setPick('rec','D:\\\\Videos')">D:\\Videos</div>
+        <div class="pick" onclick="setPick('rec','C:\\\\Users\\\\' + getUser() + '\\\\Videos')">Мои видео</div>
+        <div class="pick" onclick="setPick('rec','C:\\\\Users\\\\' + getUser() + '\\\\Desktop')">Рабочий стол</div>
       </div>
       <label class="field-label" for="inp-rec">
         Папка записей<span class="field-required">*</span>
       </label>
-      <input type="text" id="inp-rec" placeholder="D:\\Records">
-      <div class="field-hint">Вводи полный путь вручную, например: <code>D:\\Records</code></div>
+      <input type="text" id="inp-rec" placeholder="D:\Records">
+      <div class="field-hint">Например: <code>D:\Records</code></div>
       <div style="display:flex;gap:10px;margin-top:1.25rem">
         <button class="btn-s" onclick="backStep1()">← Назад</button>
         <button class="btn-p" id="btn2" onclick="goStep3()" disabled>Далее →</button>
@@ -786,4 +751,5 @@
   <a href="index.html" class="footer-link">fixed wanted · MoonLoader · SA:MP</a>
 
 </main>
+</body>
 </html>
