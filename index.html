@@ -560,6 +560,20 @@
     .ch, .cr { grid-template-columns: 1fr; }
     .ch { display: none; }
   }
+.dava{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.dava img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}  
 </style>
 </head>
 <body>
@@ -857,13 +871,19 @@
     <div class="s-label">Разработчик</div>
     <h2 class="s-title">Автор</h2>
   </div>
-<div class="dava">
-  <img src="Mellstroy.png">
-</div>
+
+  <div class="dev r">
+
+    <div class="dava">
+      <img src="Mellstroy.png" alt="dev">
+    </div>
+
+    <div>
       <div class="dname">dylet</div>
       <div class="drole">Lua разработчик · SA:MP скрипты</div>
       <div class="dtag">@dylettt</div>
     </div>
+
   </div>
 </section>
 
