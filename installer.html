@@ -434,7 +434,7 @@
     var rec = document.getElementById('inp-rec').value.trim();
     var bs  = '\\';
 
-    var luaPath = ml  + bs + 'fixedwanted.luac';
+    var luaPath = ml  + bs + 'fixedwanted.lua';
     var logFile = ml  + bs + 'wanted_log.html';
     var batFile = ml  + bs + 'open_log.bat';
 
@@ -484,7 +484,7 @@
     bat.push('echo [1/4] Создаём папку...');
     bat.push('if not exist "' + ml + '" mkdir "' + ml + '"');
     bat.push('echo [2/4] Скачиваем fixedwanted.lua...');
-    bat.push('curl -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.luac" -o "' + luaPath + '"');
+    bat.push('curl -L "https://raw.githubusercontent.com/dyletafk/fixedwanted/main/fixedwanted.lua" -o "' + luaPath + '"');
     bat.push('if errorlevel 1 ( echo ОШИБКА: нет интернета & goto :error )');
     bat.push('echo [3/4] Прописываем пути...');
     bat.push('powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + encoded);
