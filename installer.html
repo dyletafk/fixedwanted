@@ -429,7 +429,7 @@
     document.getElementById('pn3').textContent = '3';
   }
 
-  function download() {
+function download() {
     var ml  = document.getElementById('inp-ml').value.trim();
     var rec = document.getElementById('inp-rec').value.trim();
     var bs  = '\\';
@@ -438,9 +438,16 @@
     var logFile = ml  + bs + 'wanted_log.html';
     var batFile = ml  + bs + 'open_log.bat';
 
-    var recPS  = rec.split("'").join("''");
-    var logPS  = logFile.split("'").join("''");
-    var batPS  = batFile.split("'").join("''");
+    // === ИСПРАВЛЕНИЕ: Делаем двойные слэши для Lua ===
+    var recLua = rec.replace(/\\/g, '\\\\');
+    var logLua = logFile.replace(/\\/g, '\\\\');
+    var batLua = batFile.replace(/\\/g, '\\\\');
+
+    var recPS  = recLua.split("'").join("''");
+    var logPS  = logLua.split("'").join("''");
+    var batPS  = batLua.split("'").join("''");
+    
+    // luaPS оставляем как есть, так как PowerShell (Get-Content) нормально читает одинарные
     var luaPS  = luaPath.split("'").join("''");
 
     var ps1Content = [
