@@ -3,1007 +3,479 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fixed Wanted — Lua скрипт</title>
+<title>Fixed Wanted — Lua скрипт для Rodina RP</title>
+<meta name="description" content="Fixed Wanted — выдача розыска и штрафов по УК и АК для Rodina RP. Lua · MoonLoader · SA:MP.">
+<meta name="theme-color" content="#111111">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:       #0a0a0f;
-    --bg2:      #0f0f18;
-    --bg3:      #14141f;
-    --accent:   #6c5ce7;
-    --accent2:  #a29bfe;
-    --accent-g: linear-gradient(135deg, #6c5ce7, #a29bfe);
-    --text:     #e0e0f0;
-    --text-dim: #6b6b8a;
-    --text-mid: #9999bb;
-    --border:   rgba(108,92,231,0.15);
-    --border2:  rgba(255,255,255,0.06);
-    --radius:   14px;
-    --radius-sm: 8px;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  #starfield {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(90px);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .orb1 { width: 600px; height: 600px; background: rgba(108,92,231,0.07); top: -150px; left: -150px; }
-  .orb2 { width: 400px; height: 400px; background: rgba(162,155,254,0.05); bottom: 100px; right: -100px; }
-
-  /* NAV */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2.5rem;
-    height: 64px;
-    background: rgba(10,10,15,0.8);
-    backdrop-filter: blur(24px);
-    border-bottom: 1px solid var(--border2);
-  }
-
-  .nav-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 1rem;
-    color: #fff;
-    text-decoration: none;
-  }
-
-  .nav-logo-mark {
-    width: 30px; height: 30px;
-    background: var(--accent-g);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #fff;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--text-mid);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: #fff; }
-
-  .nav-cta {
-    background: var(--accent-g);
-    color: #fff;
-    padding: 9px 22px;
-    border-radius: 50px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: opacity 0.2s, box-shadow 0.2s;
-  }
-
-  .nav-cta:hover { opacity: 0.85; box-shadow: 0 0 30px rgba(108,92,231,0.4); }
-
-  /* HERO */
-  .hero {
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 80px 2rem 5rem;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(108,92,231,0.1);
-    border: 1px solid rgba(108,92,231,0.25);
-    color: var(--accent2);
-    font-size: 0.78rem;
-    font-weight: 500;
-    padding: 6px 16px;
-    border-radius: 50px;
-    margin-bottom: 2rem;
-    animation: fadeUp 0.7s ease both;
-  }
-
-  .bdot {
-    width: 6px; height: 6px;
-    background: var(--accent2);
-    border-radius: 50%;
-    animation: blink 2s ease infinite;
-  }
-
-  @keyframes blink {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .hero h1 {
-    font-size: clamp(2.2rem, 6vw, 4.2rem);
-    font-weight: 800;
-    line-height: 1.15;
-    letter-spacing: -0.5px;
-    color: #fff;
-    max-width: 700px;
-    margin-bottom: 1.25rem;
-    animation: fadeUp 0.7s 0.1s ease both;
-  }
-
-  .hero h1 .hl {
-    background: var(--accent-g);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero-sub {
-    color: var(--text-mid);
-    font-size: 1rem;
-    max-width: 460px;
-    margin-bottom: 2.5rem;
-    animation: fadeUp 0.7s 0.2s ease both;
-  }
-
-  .hero-btns {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp 0.7s 0.3s ease both;
-  }
-
-  .btn-p {
-    background: var(--accent-g);
-    color: #fff;
-    padding: 13px 30px;
-    border-radius: 50px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: opacity 0.2s, box-shadow 0.2s;
-  }
-
-  .btn-p:hover { opacity: 0.85; box-shadow: 0 0 30px rgba(108,92,231,0.4); }
-
-  .btn-s {
-    background: transparent;
-    color: var(--text-mid);
-    border: 1px solid var(--border2);
-    padding: 13px 30px;
-    border-radius: 50px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: border-color 0.2s, color 0.2s;
-  }
-
-  .btn-s:hover { border-color: rgba(108,92,231,0.4); color: #fff; }
-
-  .stats-row {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 4rem;
-    animation: fadeUp 0.7s 0.4s ease both;
-  }
-
-  .stat-card {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 1.25rem 2rem;
-    text-align: center;
-    min-width: 110px;
-  }
-
-  .stat-n {
-    display: block;
-    font-size: 1.9rem;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .stat-l {
-    display: block;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  /* SECTION */
-  .s {
-    position: relative;
-    z-index: 1;
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 5rem 2rem;
-  }
-
-  .s-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent2);
-    margin-bottom: 0.6rem;
-  }
-
-  .s-title {
-    font-size: clamp(1.7rem, 4vw, 2.6rem);
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: -0.3px;
-    margin-bottom: 0.6rem;
-  }
-
-  .s-sub {
-    color: var(--text-mid);
-    font-size: 0.925rem;
-    max-width: 440px;
-    margin-bottom: 2.5rem;
-  }
-
-  /* FEATURES */
-  .fg {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-  }
-
-  .fc {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 1.75rem;
-    transition: border-color 0.25s, transform 0.25s;
-  }
-
-  .fc:hover { border-color: rgba(108,92,231,0.3); transform: translateY(-2px); }
-
-  .fi {
-    width: 44px; height: 44px;
-    background: rgba(108,92,231,0.1);
-    border-radius: var(--radius-sm);
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 1rem;
-    color: var(--accent2);
-  }
-
-  .fi svg {
-    width: 22px;
-    height: 22px;
-    stroke: var(--accent2);
-  }
-
-  .ft { font-weight: 700; font-size: 0.975rem; color: #fff; margin-bottom: 0.35rem; }
-  .fd { font-size: 0.86rem; color: var(--text-mid); line-height: 1.6; }
-
-  /* ACCORDION */
-  .ll { display: flex; flex-direction: column; gap: 6px; }
-
-  .lb {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .lb:hover { border-color: rgba(108,92,231,0.22); }
-  .lb.open { border-color: rgba(108,92,231,0.3); }
-
-  .lh {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 1rem 1.25rem;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .ln {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--accent2);
-    background: rgba(108,92,231,0.1);
-    border: 1px solid rgba(108,92,231,0.2);
-    padding: 2px 10px;
-    border-radius: 50px;
-    white-space: nowrap;
-  }
-
-  .lname { flex: 1; font-size: 0.94rem; font-weight: 600; color: #fff; }
-
-  .lchev { color: var(--text-dim); font-size: 0.65rem; transition: transform 0.2s; }
-  .lb.open .lchev { transform: rotate(180deg); }
-
-  .litems { display: none; border-top: 1px solid var(--border2); }
-  .lb.open .litems { display: block; }
-
-  .li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0.65rem 1.25rem;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-
-  .li:last-child { border-bottom: none; }
-
-  .lin { font-size: 0.7rem; color: var(--text-dim); min-width: 28px; font-weight: 500; }
-  .lit { flex: 1; font-size: 0.86rem; color: var(--text-mid); }
-
-  .badge {
-    font-size: 0.68rem;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 50px;
-    white-space: nowrap;
-  }
-
-  .bs { background: rgba(255,75,110,0.1); color: #ff7096; border: 1px solid rgba(255,75,110,0.2); }
-  .bf { background: rgba(255,196,60,0.08); color: #ffc23c; border: 1px solid rgba(255,196,60,0.18); }
-  .bw { background: rgba(108,92,231,0.12); color: var(--accent2); border: 1px solid rgba(108,92,231,0.25); }
-
-  /* COMMANDS */
-  .ct {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .ch {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    padding: 0.75rem 1.5rem;
-    background: rgba(108,92,231,0.05);
-    border-bottom: 1px solid var(--border2);
-    gap: 2rem;
-  }
-
-  .ch span {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  .cr {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    padding: 1.1rem 1.5rem;
-    gap: 2rem;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    transition: background 0.2s;
-  }
-
-  .cr:last-child { border-bottom: none; }
-  .cr:hover { background: rgba(108,92,231,0.04); }
-
-  .cc {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.9rem;
-    color: var(--accent2);
-    font-weight: 600;
-  }
-
-  .cd { font-size: 0.86rem; color: var(--text-mid); }
-  .cd strong { display: block; color: #fff; font-weight: 600; margin-bottom: 2px; font-size: 0.875rem; }
-
-  /* INSTALL */
-  .ig {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .ic {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-  }
-
-  .inum {
-    width: 32px; height: 32px;
-    background: var(--accent-g);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 1rem;
-  }
-
-  .it { font-weight: 700; font-size: 0.94rem; color: #fff; margin-bottom: 0.35rem; }
-  .id { font-size: 0.84rem; color: var(--text-mid); line-height: 1.6; }
-  .id code {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    background: rgba(108,92,231,0.1);
-    color: var(--accent2);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.78rem;
-  }
-
-  .dl {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 1.75rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  .dlf {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 1rem;
-    color: #fff;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .dlm { font-size: 0.8rem; color: var(--text-dim); }
-
-  /* DEV */
-  .dev {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    max-width: 460px;
-    flex-wrap: wrap;
-  }
-
-  .dava {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--accent-g);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #fff;
-    flex-shrink: 0;
-  }
-
-  .dname { font-size: 1.2rem; font-weight: 700; color: #fff; }
-  .drole { font-size: 0.84rem; color: var(--text-dim); margin: 3px 0 8px; }
-  .dtag {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.8rem;
-    color: var(--accent2);
-  }
-
-  /* FOOTER */
-  footer {
-    position: relative;
-    z-index: 1;
-    border-top: 1px solid var(--border2);
-    padding: 2rem;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 0.82rem;
-  }
-
-  /* REVEAL */
-  .r {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .r.v { opacity: 1; transform: none; }
-
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-
-  @media (max-width: 680px) {
-    .nav-links { display: none; }
-    nav { padding: 0 1.2rem; }
-    .ch, .cr { grid-template-columns: 1fr; }
-    .ch { display: none; }
-  }
-.dava{
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  overflow:hidden;
-  flex-shrink:0;
+:root{
+  --bg:#111111;
+  --bg2:#161616;
+  --bg3:#1c1c1c;
+  --line:#262626;
+  --line2:#333333;
+  --t1:#f2f2f2;
+  --t2:#a3a3a3;
+  --t3:#6b6b6b;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:#e5e5e5;color:#111}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#333;border-radius:6px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.wrap{max-width:1000px;margin:0 auto;padding:0 28px}
 
-.dava img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}  
+/* soft grey glow, the only decoration */
+.halo{position:fixed;top:-30vh;left:50%;width:900px;height:600px;margin-left:-450px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,255,255,.07),transparent);pointer-events:none;z-index:0}
+
+/* NAV — frosted glass */
+nav{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:50;
+  display:flex;align-items:center;gap:6px;padding:6px 6px 6px 18px;border-radius:999px;
+  background:rgba(30,30,30,.55);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.12),0 10px 30px -10px rgba(0,0,0,.7);
+  max-width:calc(100vw - 24px);
+}
+nav .logo{font-weight:600;font-size:.88rem;letter-spacing:-.01em;margin-right:14px;white-space:nowrap}
+nav ul{display:flex;list-style:none}
+nav ul a{display:block;padding:7px 13px;border-radius:999px;font-size:.82rem;color:var(--t2);transition:color .2s,background .2s}
+nav ul a:hover{color:var(--t1)}
+nav ul a.on{color:var(--t1);background:rgba(255,255,255,.08)}
+nav .cta{margin-left:4px;padding:8px 16px;border-radius:999px;background:var(--t1);color:#111;font-size:.82rem;font-weight:500;transition:opacity .2s}
+nav .cta:hover{opacity:.85}
+
+/* HERO */
+.hero{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:120px 0 70px}
+.label{font-family:var(--mono);font-size:.74rem;color:var(--t3);letter-spacing:.04em;margin-bottom:28px;display:flex;align-items:center;gap:10px}
+.label i{width:6px;height:6px;border-radius:50%;background:var(--t2);animation:p 2.4s ease infinite}
+@keyframes p{50%{opacity:.25}}
+h1{font-weight:500;font-size:clamp(3rem,10vw,7.6rem);line-height:.95;letter-spacing:-.05em}
+h1 span{color:var(--t3)}
+.sub{max-width:460px;margin:30px 0 38px;color:var(--t2);font-size:1.05rem}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:999px;font-weight:500;font-size:.92rem;transition:transform .25s,background .25s,box-shadow .25s}
+.btn-p{background:var(--t1);color:#111}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(255,255,255,.4)}
+.btn-g{color:var(--t1);background:rgba(255,255,255,.04);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.14)}
+.btn-g:hover{transform:translateY(-2px);background:rgba(255,255,255,.08)}
+.btn svg{width:16px;height:16px}
+.meta{display:flex;flex-wrap:wrap;margin-top:72px;border-top:1px solid var(--line)}
+.meta div{flex:1;min-width:130px;padding:22px 0 0}
+.meta div+div{padding-left:22px;border-left:1px solid var(--line)}
+.meta b{display:block;font-weight:500;font-size:2rem;letter-spacing:-.04em;line-height:1.1}
+.meta span{font-size:.76rem;color:var(--t3)}
+
+/* SECTIONS */
+section.s{position:relative;z-index:1;padding:110px 0 0}
+.sh{display:grid;grid-template-columns:140px 1fr;gap:20px;margin-bottom:46px;align-items:baseline}
+.sh .n{font-family:var(--mono);font-size:.76rem;color:var(--t3)}
+.sh h2{font-weight:500;font-size:clamp(1.7rem,4vw,2.6rem);letter-spacing:-.035em;line-height:1.1}
+.sh p{color:var(--t2);margin-top:10px;max-width:480px;font-size:.96rem}
+
+/* list rows (features / commands) */
+.list{border-top:1px solid var(--line)}
+.item{display:grid;grid-template-columns:140px 1fr 1.3fr;gap:20px;padding:26px 0;border-bottom:1px solid var(--line);align-items:baseline;transition:background .25s}
+.item:hover{background:linear-gradient(90deg,transparent,rgba(255,255,255,.025),transparent)}
+.item .k{font-family:var(--mono);font-size:.76rem;color:var(--t3)}
+.item h3{font-weight:500;font-size:1.05rem;letter-spacing:-.01em}
+.item p{color:var(--t2);font-size:.92rem}
+.item code{font-family:var(--mono);font-size:.9rem;color:var(--t1);background:var(--bg3);padding:5px 12px;border-radius:8px;justify-self:start;box-shadow:inset 0 0 0 1px var(--line2)}
+.item .col2{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+
+/* EXPLORER */
+.ex{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+.panel{border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.12);}
+.ex-main{padding:16px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.seg{position:relative;display:flex;padding:4px;border-radius:999px;background:#0c0c0c;box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{position:relative;z-index:1;padding:8px 20px;border-radius:999px;font-size:.84rem;font-weight:500;color:var(--t3);transition:color .3s}
+.seg button.on{color:#111}
+.seg .pill{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:var(--t1);transition:transform .4s cubic-bezier(.3,1.3,.4,1)}
+.seg[data-v="ak"] .pill{transform:translateX(100%)}
+.search{flex:1;min-width:150px;display:flex;align-items:center;gap:10px;padding:0 16px;border-radius:999px;background:#0c0c0c;box-shadow:inset 0 0 0 1px var(--line)}
+.search svg{width:15px;height:15px;stroke:var(--t3);flex-shrink:0}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--t1);font:inherit;font-size:.88rem;padding:10px 0}
+.search input::placeholder{color:var(--t3)}
+.desc{font-size:.78rem;color:var(--t3);margin:0 4px 12px;font-family:var(--mono)}
+.acc{display:flex;flex-direction:column;gap:6px;max-height:620px;overflow-y:auto;padding-right:2px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.art{border-radius:14px;background:rgba(255,255,255,.02);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;transition:background .25s}
+.art.open{background:rgba(255,255,255,.04)}
+.art-h{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;text-align:left}
+.art-n{font-family:var(--mono);font-size:.7rem;color:var(--t3);min-width:44px}
+.art-t{flex:1;font-size:.9rem;font-weight:500}
+.art-c{font-family:var(--mono);font-size:.68rem;color:var(--t3)}
+.chev{width:15px;height:15px;stroke:var(--t3);transition:transform .3s}
+.art.open .chev{transform:rotate(180deg)}
+.art-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.3,.9,.3,1)}
+.art.open .art-b{grid-template-rows:1fr}
+.art-b>div{overflow:hidden}
+.row{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 16px;border-top:1px solid var(--line);transition:background .2s}
+.row:hover{background:rgba(255,255,255,.04)}
+.row.sel{background:rgba(255,255,255,.08)}
+.row.sel::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;background:var(--t1);border-radius:2px}
+.row-n{font-family:var(--mono);font-size:.7rem;color:var(--t3);min-width:44px}
+.row-t{flex:1;font-size:.84rem;color:var(--t2)}
+.row.sel .row-t{color:var(--t1)}
+.tag{font-family:var(--mono);font-size:.7rem;white-space:nowrap;color:var(--t1);padding:3px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line2)}
+.tag.s{letter-spacing:.06em;padding:3px 10px}
+.tag .off{color:#3a3a3a}
+.tag.w{color:var(--t2);border-style:dashed}
+.empty{padding:36px 10px;text-align:center;color:var(--t3);font-size:.88rem}
+
+.side{position:sticky;top:92px;display:flex;flex-direction:column;gap:12px}
+.term-bar{display:flex;align-items:center;gap:6px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.term-bar i{width:9px;height:9px;border-radius:50%;background:#333}
+.term-bar span{margin-left:auto;font-family:var(--mono);font-size:.66rem;color:var(--t3)}
+.term-body{padding:18px;font-family:var(--mono);font-size:.8rem;line-height:1.85;min-height:250px;color:var(--t1)}
+.d{color:var(--t3)}.m{color:var(--t2)}
+.caret{display:inline-block;width:7px;height:14px;background:var(--t1);vertical-align:-2px;margin-left:2px;animation:c 1s steps(1) infinite}
+@keyframes c{50%{opacity:0}}
+.copy{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px;font-size:.88rem;font-weight:500;border-radius:16px;transition:background .25s,transform .25s}
+.copy:hover{background:rgba(255,255,255,.07);transform:translateY(-1px)}
+.copy svg{width:15px;height:15px}
+.note{font-size:.74rem;color:var(--t3);padding:0 4px}
+
+/* INSTALL */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);margin-bottom:34px}
+.step{padding:26px 26px 26px 0}
+.step+.step{padding-left:26px;border-left:1px solid var(--line)}
+.step .no{font-family:var(--mono);font-size:.76rem;color:var(--t3);margin-bottom:34px}
+.step h3{font-weight:500;font-size:1rem;margin-bottom:8px}
+.step p{color:var(--t2);font-size:.9rem}
+.step code,.item p code{font-family:var(--mono);font-size:.76rem;color:var(--t1);background:var(--bg3);padding:2px 7px;border-radius:6px;box-shadow:none;display:inline}
+.dl{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:26px 30px}
+.dl .fn{font-family:var(--mono);font-weight:500}
+.dl .fm{font-size:.78rem;color:var(--t3);margin-top:2px}
+
+/* DEV */
+.dev{display:flex;align-items:center;gap:20px}
+.ava{position:relative;width:68px;height:68px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--bg3);font-weight:500;font-size:1.3rem;color:var(--t2);box-shadow:0 0 0 1px var(--line2);flex-shrink:0}
+.ava img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1)}
+.dname{font-weight:500;font-size:1.25rem;letter-spacing:-.02em}
+.dtag{font-family:var(--mono);font-size:.82rem;color:var(--t2)}
+
+footer{position:relative;z-index:1;margin-top:130px;border-top:1px solid var(--line);padding:26px 0 40px;color:var(--t3);font-size:.8rem}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.rv{opacity:0;transform:translateY(18px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+@media (max-width:860px){
+  .ex{grid-template-columns:1fr}.side{position:static}
+  .item{grid-template-columns:1fr;gap:6px}
+  .sh{grid-template-columns:1fr;gap:8px}
+  .steps{grid-template-columns:1fr}
+  .step,.step+.step{padding:24px 0;border-left:0;border-bottom:1px solid var(--line)}
+  .step .no{margin-bottom:14px}
+}
+@media (max-width:640px){
+  nav ul{display:none}
+  .meta div+div{padding-left:14px}
+  .meta div{min-width:45%}
+  .meta div:nth-child(3){border-left:0;padding-left:0}
+  .dl{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<div class="halo"></div>
 
-<canvas id="starfield"></canvas>
-<div class="orb orb1"></div>
-<div class="orb orb2"></div>
-
-<!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo">
-    <div class="nav-logo-mark">FW</div>
-    Fixed Wanted
-  </a>
-  <ul class="nav-links">
+  <a href="#top" class="logo">Fixed Wanted</a>
+  <ul id="links">
     <li><a href="#features">Функции</a></li>
-    <li><a href="#uk">УК</a></li>
-    <li><a href="#ak">АК</a></li>
+    <li><a href="#codes">УК / АК</a></li>
     <li><a href="#commands">Команды</a></li>
     <li><a href="#install">Установка</a></li>
+    <li><a href="#dev">Автор</a></li>
   </ul>
-  <a href="#install" class="nav-cta">Скачать</a>
+  <a href="#install" class="cta">Скачать</a>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-badge"><span class="bdot"></span> Lua · SA:MP · RodinaRP 04</div>
-  <h1>Умная выдача <span class="hl">розыска</span> и штрафов</h1>
-  <p class="hero-sub">Быстрый интерфейс по статьям УК и АК, автоматический HTML лог, команды за одно нажатие.</p>
-  <div class="hero-btns">
-    <a href="#install" class="btn-p">Скачать скрипт</a>
-    <a href="#uk" class="btn-s">Смотреть статьи</a>
+<header class="hero wrap" id="top">
+  <div class="label"><i></i>Lua · MoonLoader · SA:MP · Rodina RP 04</div>
+  <h1>Fixed<br><span>Wanted</span></h1>
+  <p class="sub">Выдача розыска и штрафов по статьям УК и АК. Одно нажатие — команда отправлена, запись в логе.</p>
+  <div class="btns">
+    <a href="#install" class="btn btn-p">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Скачать скрипт
+    </a>
+    <a href="#codes" class="btn btn-g">Смотреть статьи</a>
   </div>
-  <div class="stats-row">
-    <div class="stat-card"><span class="stat-n">8</span><span class="stat-l">Статей УК</span></div>
-    <div class="stat-card"><span class="stat-n">31</span><span class="stat-l">Пунктов УК</span></div>
-    <div class="stat-card"><span class="stat-n">6</span><span class="stat-l">Статей АК</span></div>
-    <div class="stat-card"><span class="stat-n">HTML</span><span class="stat-l">Авто лог</span></div>
+  <div class="meta">
+    <div><b data-c="uk-art">0</b><span>статей УК</span></div>
+    <div><b data-c="uk-pts">0</b><span>пунктов УК</span></div>
+    <div><b data-c="ak-art">0</b><span>статей АК</span></div>
+    <div><b>HTML</b><span>авто-лог</span></div>
   </div>
-</div>
+</header>
 
-<!-- FEATURES -->
-<section class="s" id="features">
-  <div class="r">
-    <div class="s-label">Возможности</div>
-    <h2 class="s-title">Что умеет скрипт</h2>
-    <p class="s-sub">Всё что нужно сотруднику — в одном окне</p>
-  </div>
-  <div class="fg r">
-
-    <!-- Быстрая выдача — молния -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      </div>
-      <div class="ft">Быстрая выдача</div>
-      <div class="fd">Одна кнопка — и команда /su отправлена с нужным уровнем розыска автоматически</div>
-    </div>
-
-    <!-- Полный УК — буфер обмена со списком -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-      </div>
-      <div class="ft">Полный УК</div>
-      <div class="fd">8 статей, 31 пункт. Розыск от 1 до 6 звёзд — структурировано по разделам</div>
-    </div>
-
-    <!-- АК и штрафы — карточка оплаты -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-      </div>
-      <div class="ft">АК и штрафы</div>
-      <div class="fd">Авто-отправка /ticket с суммой и розыск по статьям административного кодекса</div>
-    </div>
-
-    <!-- HTML лог — файл с кодом -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 13l-2 2 2 2"/><path d="M14 13l2 2-2 2"/></svg>
-      </div>
-      <div class="ft">HTML лог</div>
-      <div class="fd">Каждая выдача фиксируется в HTML файл — дата, игрок, статья, ссылка на запись</div>
-    </div>
-
-    <!-- МСК время — часы -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="ft">МСК время</div>
-      <div class="fd">Время в логе автоматически подстраивается под московский часовой пояс</div>
-    </div>
-
-    <!-- Быстрый доступ — папка открытая -->
-    <div class="fc">
-      <div class="fi">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
-      </div>
-      <div class="ft">Быстрый доступ</div>
-      <div class="fd">Открытие папки с записями и HTML лога прямо из интерфейса скрипта</div>
-    </div>
-
+<section class="s wrap" id="features">
+  <div class="sh rv"><span class="n">01</span><div><h2>Что умеет скрипт</h2><p>Всё, что нужно сотруднику, в одном окне.</p></div></div>
+  <div class="list rv">
+    <div class="item"><span class="k">/su</span><h3>Быстрая выдача</h3><p>Одна кнопка — и команда /su отправлена с нужным уровнем розыска автоматически.</p></div>
+    <div class="item"><span class="k">УК</span><h3>Полный УК</h3><p>8 статей, розыск от 1 до 6 звёзд, структурировано по разделам.</p></div>
+    <div class="item"><span class="k">АК</span><h3>АК и штрафы</h3><p>Авто-отправка /ticket с суммой и розыск по статьям административного кодекса.</p></div>
+    <div class="item"><span class="k">.html</span><h3>HTML лог</h3><p>Каждая выдача фиксируется в HTML файл — дата, игрок, статья, ссылка на запись.</p></div>
+    <div class="item"><span class="k">МСК</span><h3>МСК время</h3><p>Время в логе автоматически подстраивается под московский часовой пояс.</p></div>
+    <div class="item"><span class="k">dir</span><h3>Быстрый доступ</h3><p>Открытие папки с записями и HTML лога прямо из интерфейса скрипта.</p></div>
   </div>
 </section>
 
-<!-- УК -->
-<section class="s" id="uk">
-  <div class="r">
-    <div class="s-label">Уголовный кодекс</div>
-    <h2 class="s-title">Полный УК</h2>
-    <p class="s-sub">Все статьи и уровни розыска, встроенные в скрипт</p>
-  </div>
-  <div class="ll r">
-    <div class="lb open">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 1</span><span class="lname">Причинение вреда здоровью человека</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">1.1</span><span class="lit">За безоружное нападение на человека</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">1.2</span><span class="lit">За вооружённое нападение на человека</span><span class="badge bs">4 ★</span></div>
-        <div class="li"><span class="lin">1.3</span><span class="lit">За похищение человека</span><span class="badge bs">5 ★</span></div>
-        <div class="li"><span class="lin">1.4</span><span class="lit">За убийство человека</span><span class="badge bs">6 ★</span></div>
+<section class="s wrap" id="codes">
+  <div class="sh rv"><span class="n">02</span><div><h2>Кодексы</h2><p>Ищи по номеру или тексту. Нажми на пункт — справа покажется команда.</p></div></div>
+  <div class="ex">
+    <div class="ex-main panel rv">
+      <div class="tools">
+        <div class="seg" id="seg" data-v="uk"><span class="pill"></span><button class="on" data-v="uk">УК</button><button data-v="ak">АК</button></div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="q" type="text" placeholder="Поиск: 4.5, угон, маска…" autocomplete="off">
+        </label>
       </div>
+      <div class="desc" id="desc"></div>
+      <div class="acc" id="acc"></div>
     </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 2</span><span class="lname">Оружие и различное снаряжение</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">2.1</span><span class="lit">Ношение оружия в боевой готовности в открытом виде</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">2.2</span><span class="lit">За незаконное изготовление оружия</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">2.3</span><span class="lit">За незаконное хранение оружия</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">2.4</span><span class="lit">За продажу патронов и оружия</span><span class="badge bs">4 ★</span></div>
+    <aside class="side rv">
+      <div class="panel">
+        <div class="term-bar"><i></i><i></i><i></i><span>превью · FWanted</span></div>
+        <div class="term-body" id="term"></div>
       </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 3</span><span class="lname">Наркотики, психотропные вещества</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">3.1</span><span class="lit">За хранение наркотических веществ</span><span class="badge bs">5 ★</span></div>
-        <div class="li"><span class="lin">3.2</span><span class="lit">За продажу наркотических веществ</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">3.3</span><span class="lit">За приобретение / употребление наркотических веществ</span><span class="badge bs">1 ★</span></div>
-        <div class="li"><span class="lin">3.4</span><span class="lit">За сбыт наркотических средств в особо крупном размере</span><span class="badge bs">6 ★</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 4</span><span class="lname">Бандитизм</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">4.1</span><span class="lit">Выдача себя за сотрудника силовых структур</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">4.2</span><span class="lit">Препятствие движению кортежа, колонны или конвоя</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">4.3</span><span class="lit">Нападение на кортеж, колонну или конвой</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">4.4</span><span class="lit">Преследование служебного автомобиля во время погони</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">4.5</span><span class="lit">За угон транспорта</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">4.6</span><span class="lit">За попытку угона частного / служебного транспорта</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">4.7</span><span class="lit">Шантаж / вымогательство чужого имущества</span><span class="badge bs">4 ★</span></div>
-        <div class="li"><span class="lin">4.8</span><span class="lit">За совершение ограбления в отношении граждан</span><span class="badge bs">3 ★</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 5</span><span class="lname">Терроризм</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">5.1</span><span class="lit">Совершение теракта путём захвата государственных учреждений</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">5.2</span><span class="lit">Захват заложников и причинение вреда их здоровью</span><span class="badge bs">6 ★</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 6</span><span class="lname">Коррупция</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">6.1</span><span class="lit">Дача взятки должностному лицу</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">6.2</span><span class="lit">Принятие взятки должностным лицом</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">6.3</span><span class="lit">Вымогательство в отношении должностного лица</span><span class="badge bs">6 ★</span></div>
-        <div class="li"><span class="lin">6.4</span><span class="lit">Попытка дачи взятки должностному лицу</span><span class="badge bs">4 ★</span></div>
-        <div class="li"><span class="lin">6.5</span><span class="lit">Попытка получения взятки должностным лицом</span><span class="badge bs">6 ★</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 7</span><span class="lname">Охраняемые объекты и временные запреты</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">7.1</span><span class="lit">Незаконное проникновение на территорию тюрьмы / военной базы</span><span class="badge bs">5 ★</span></div>
-        <div class="li"><span class="lin">7.2</span><span class="lit">Незаконное проникновение в служебное место</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">7.3</span><span class="lit">Незаконное проникновение на охраняемую территорию</span><span class="badge bs">1 ★</span></div>
-        <div class="li"><span class="lin">7.4</span><span class="lit">Создание помехи строю / тренировке / мероприятию</span><span class="badge bs">2 ★</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 8</span><span class="lname">Невыполнение законных требований</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">8.1</span><span class="lit">За невыполнение законных требований сотрудника правоохранительных органов</span><span class="badge bs">1 ★</span></div>
-      </div>
-    </div>
+      <button class="copy panel" id="copyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copyTxt">Скопировать команду</span>
+      </button>
+      <p class="note">Демонстрация. ID 228 — условный пример, в игре подставляется ID выбранного игрока.</p>
+    </aside>
   </div>
 </section>
 
-<!-- АК -->
-<section class="s" id="ak">
-  <div class="r">
-    <div class="s-label">Административный кодекс</div>
-    <h2 class="s-title">Полный АК</h2>
-    <p class="s-sub">Штрафы и розыск по административным правонарушениям</p>
-  </div>
-  <div class="ll r">
-    <div class="lb open">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 1</span><span class="lname">Правонарушения в сфере общественного порядка</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">1.1</span><span class="lit">Распитие спиртных напитков в общественных местах</span><span class="badge bf">20 000 ₽</span></div>
-        <div class="li"><span class="lin">1.2</span><span class="lit">Курение в общественных местах и зданиях</span><span class="badge bf">15 000 ₽</span></div>
-        <div class="li"><span class="lin">1.3</span><span class="lit">Нахождение в непристойном виде в общественных местах</span><span class="badge bw">предупр. / 100 000 ₽</span></div>
-        <div class="li"><span class="lin">1.4</span><span class="lit">Громкая музыка после 23:00</span><span class="badge bw">предупр. / 50 000 ₽</span></div>
-        <div class="li"><span class="lin">1.5</span><span class="lit">Блокирование проходов, входов и выходов</span><span class="badge bf">100 000 ₽</span></div>
-        <div class="li"><span class="lin">1.6</span><span class="lit">Агрессивное приставание к гражданам</span><span class="badge bf">100 000 ₽</span></div>
-        <div class="li"><span class="lin">1.7</span><span class="lit">Порча государственного имущества намеренно</span><span class="badge bf">100 000 ₽</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 2</span><span class="lname">Оскорбление и неадекватное поведение</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">2.1</span><span class="lit">За оскорбление гражданского лица</span><span class="badge bs">1 ★</span></div>
-        <div class="li"><span class="lin">2.2</span><span class="lit">За оскорбление должностного лица</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">2.3</span><span class="lit">Систематическое использование нецензурной брани в общественных местах</span><span class="badge bf">50 000 ₽</span></div>
-        <div class="li"><span class="lin">2.4</span><span class="lit">Публичные угрозы без факта нападения</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">2.5</span><span class="lit">Справление естественных нужд в общественных местах</span><span class="badge bf">50 000 ₽</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 3</span><span class="lname">Проституция</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">3.1</span><span class="lit">За занятие проституцией</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">3.2</span><span class="lit">За вовлечение в занятие проституцией</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">3.3</span><span class="lit">Организация притонов</span><span class="badge bs">3 ★</span></div>
-        <div class="li"><span class="lin">3.4</span><span class="lit">Реклама услуг интимного характера в общественных местах</span><span class="badge bf">200 000 ₽</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 4</span><span class="lname">Ношение предметов, скрывающих лицо</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">4.1</span><span class="lit">Ношение маски гражданским лицом</span><span class="badge bf">50 000 ₽</span></div>
-        <div class="li"><span class="lin">4.2</span><span class="lit">Ношение маски государственными гражданскими служащими</span><span class="badge bf">100 000 ₽</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 5</span><span class="lname">Нарушения правил дорожного движения</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">5.1</span><span class="lit">Превышение установленной скорости движения</span><span class="badge bf">20 000 ₽</span></div>
-        <div class="li"><span class="lin">5.2</span><span class="lit">Игнорирование дорожных знаков и разметки</span><span class="badge bf">50 000 ₽</span></div>
-        <div class="li"><span class="lin">5.3</span><span class="lit">Движение по встречной полосе</span><span class="badge bf">100 000 ₽</span></div>
-        <div class="li"><span class="lin">5.4</span><span class="lit">Оставление ТС в неположенном месте</span><span class="badge bf">35 000 ₽</span></div>
-        <div class="li"><span class="lin">5.5</span><span class="lit">Управление ТС без водительского удостоверения</span><span class="badge bf">100 000 ₽</span></div>
-        <div class="li"><span class="lin">5.6</span><span class="lit">Управление ТС в состоянии алкогольного / наркотического опьянения</span><span class="badge bf">500 000 ₽</span></div>
-      </div>
-    </div>
-    <div class="lb">
-      <div class="lh" onclick="tl(this)"><span class="ln">Ст. 6</span><span class="lname">Нарушение политических прав</span><span class="lchev">▼</span></div>
-      <div class="litems">
-        <div class="li"><span class="lin">6.1</span><span class="lit">Нарушение права гражданина на тайну голосования</span><span class="badge bs">2 ★</span></div>
-        <div class="li"><span class="lin">6.2</span><span class="lit">Нарушение агитационного периода</span><span class="badge bs">1 ★</span></div>
-        <div class="li"><span class="lin">6.3</span><span class="lit">Незаконная политическая агитация</span><span class="badge bs">1 ★</span></div>
-      </div>
-    </div>
+<section class="s wrap" id="commands">
+  <div class="sh rv"><span class="n">03</span><div><h2>Команды</h2><p>Вводятся в чат прямо в игре.</p></div></div>
+  <div class="list rv">
+    <div class="item"><code>/sw [ID]</code><h3>Открыть интерфейс</h3><p>Окно выдачи розыска или штрафа для указанного игрока по его ID.</p></div>
+    <div class="item"><code>/swlog</code><h3>Открыть лог</h3><p>HTML файл с историей всех выданных розысков и штрафов.</p></div>
+    <div class="item"><code>/swrec</code><h3>Папка с записями</h3><p>Быстро открывает папку с видеозаписями через Проводник Windows.</p></div>
   </div>
 </section>
 
-<!-- COMMANDS -->
-<section class="s" id="commands">
-  <div class="r">
-    <div class="s-label">Команды</div>
-    <h2 class="s-title">Консольные команды</h2>
-    <p class="s-sub">Вводятся в чат прямо в игре</p>
+<section class="s wrap" id="install">
+  <div class="sh rv"><span class="n">04</span><div><h2>Установка</h2><p>Займёт меньше минуты.</p></div></div>
+  <div class="steps rv">
+    <div class="step"><div class="no">01</div><h3>Скачать и установить</h3><p>Нажми кнопку ниже — скачается <code>install.bat</code>. Открой его, он сам установит скрипт в нужную папку.</p></div>
+    <div class="step"><div class="no">02</div><h3>Настроить пути</h3><p>Открой <code>fixedwanted.lua</code> и укажи папку с записями в секции <code>-- НАСТРОЙКИ</code>.</p></div>
+    <div class="step"><div class="no">03</div><h3>Запустить игру</h3><p>Зайди в игру — скрипт загрузится автоматически. В чате появится <code>[FWanted] Скрипт загружен!</code></p></div>
   </div>
-  <div class="ct r">
-    <div class="ch"><span>Команда</span><span>Описание</span></div>
-    <div class="cr"><span class="cc">/sw [ID]</span><span class="cd"><strong>Открыть интерфейс</strong>Открывает окно выдачи розыска / штрафа для указанного игрока по его ID</span></div>
-    <div class="cr"><span class="cc">/swlog</span><span class="cd"><strong>Открыть лог</strong>Открывает HTML файл с историей всех выданных розысков и штрафов</span></div>
-    <div class="cr"><span class="cc">/swrec</span><span class="cd"><strong>Папка с записями</strong>Быстро открывает папку с видеозаписями через Проводник Windows</span></div>
-  </div>
-</section>
-
-<!-- INSTALL -->
-<section class="s" id="install">
-  <div class="r">
-    <div class="s-label">Установка</div>
-    <h2 class="s-title">Как установить</h2>
-    <p class="s-sub">Займёт меньше минуты</p>
-  </div>
-  <div class="ig r">
-    <div class="ic"><div class="inum">1</div><div class="it">Скачать и установить</div><div class="id">Нажми кнопку ниже — скачается <code>install.bat</code>. Открой его, он сам установит скрипт в нужную папку.</div></div>
-    <div class="ic"><div class="inum">2</div><div class="it">Настроить пути</div><div class="id">Открой <code>fixedwanted.lua</code> и укажи папку с записями в секции <code>-- НАСТРОЙКИ</code>.</div></div>
-    <div class="ic"><div class="inum">3</div><div class="it">Запустить игру</div><div class="id">Зайди в игру — скрипт загрузится автоматически. В чате появится <code>[FWanted] Скрипт загружен!</code></div></div>
-  </div>
-  <div class="dl r">
-    <div><div class="dlf">fixedwanted.lua</div><div class="dlm">Lua · MoonLoader · SA:MP · Актуальная версия</div></div>
-    <a href="https://dyletafk.github.io/fixedwanted/installer.html" class="btn-p">Скачать</a>
+  <div class="dl panel rv">
+    <div><div class="fn">fixedwanted.lua</div><div class="fm">Lua · MoonLoader · SA:MP · Актуальная версия</div></div>
+    <a href="https://dyletafk.github.io/fixedwanted/installer.html" class="btn btn-p">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Скачать
+    </a>
   </div>
 </section>
 
-<!-- DEV -->
-<section class="s" id="dev">
-  <div class="r">
-    <div class="s-label">Разработчик</div>
-    <h2 class="s-title">Автор</h2>
-  </div>
-
-  <div class="dev r">
-
-    <div class="dava">
-      <img src="Mellstroy.png" alt="dev">
-    </div>
-
-    <div>
-      <div class="dname">dylet</div>
-      <div class="dtag">discord @yuk1ch.</div>
-    </div>
-
+<section class="s wrap" id="dev">
+  <div class="sh rv"><span class="n">05</span><div><h2>Автор</h2></div></div>
+  <div class="dev rv">
+    <div class="ava">D<img src="Mellstroy.png" alt="dylet" onerror="this.remove()"></div>
+    <div><div class="dname">dylet</div><div class="dtag">discord @yuk1ch.</div></div>
   </div>
 </section>
 
-<footer>Fixed Wanted — Lua скрипт для Rodina RP &nbsp;·&nbsp; dyletafk</footer>
+<footer><div class="wrap"><span>Fixed Wanted — Lua скрипт для Rodina RP</span><span>dyletafk</span></div></footer>
 
 <script>
-  // Starfield
-  const cv = document.getElementById('starfield');
-  const ctx = cv.getContext('2d');
-  let W, H;
+const UK=[
+ {n:1,t:'Причинение вреда здоровью человека',i:[
+  ['1.1','За безоружное нападение на человека','s',3],
+  ['1.2','За вооружённое нападение на человека','s',4],
+  ['1.3','За похищение человека','s',5],
+  ['1.4','За убийство человека','s',6]]},
+ {n:2,t:'Оружие и различное снаряжение',i:[
+  ['2.1','Ношение оружия в боевой готовности в открытом виде','s',3],
+  ['2.2','За незаконное изготовление оружия','s',3],
+  ['2.3','За незаконное хранение оружия','s',3],
+  ['2.4','За продажу патронов и оружия','s',4]]},
+ {n:3,t:'Наркотики, психотропные вещества',i:[
+  ['3.1','За хранение наркотических веществ','s',5],
+  ['3.2','За продажу наркотических веществ','s',6],
+  ['3.3','За приобретение / употребление наркотических веществ','s',1],
+  ['3.4','За сбыт наркотических средств в особо крупном размере','s',6]]},
+ {n:4,t:'Бандитизм',i:[
+  ['4.1','Выдача себя за сотрудника силовых структур','s',2],
+  ['4.2','Препятствие движению кортежа, колонны или конвоя','s',2],
+  ['4.3','Нападение на кортеж, колонну или конвой','s',6],
+  ['4.4','Преследование служебного автомобиля во время погони','s',3],
+  ['4.5','За угон транспорта','s',3],
+  ['4.6','За попытку угона частного / служебного транспорта','s',2],
+  ['4.7','Шантаж / вымогательство чужого имущества','s',4],
+  ['4.8','За совершение ограбления в отношении граждан','s',3]]},
+ {n:5,t:'Терроризм',i:[
+  ['5.1','Совершение теракта путём захвата государственных учреждений','s',6],
+  ['5.2','Захват заложников и причинение вреда их здоровью','s',6]]},
+ {n:6,t:'Коррупция',i:[
+  ['6.1','Дача взятки должностному лицу','s',6],
+  ['6.2','Принятие взятки должностным лицом','s',6],
+  ['6.3','Вымогательство в отношении должностного лица','s',6],
+  ['6.4','Попытка дачи взятки должностному лицу','s',4],
+  ['6.5','Попытка получения взятки должностным лицом','s',6]]},
+ {n:7,t:'Охраняемые объекты и временные запреты',i:[
+  ['7.1','Незаконное проникновение на территорию тюрьмы / военной базы','s',5],
+  ['7.2','Незаконное проникновение в служебное место','s',2],
+  ['7.3','Незаконное проникновение на охраняемую территорию','s',1],
+  ['7.4','Создание помехи строю / тренировке / мероприятию','s',2]]},
+ {n:8,t:'Невыполнение законных требований',i:[
+  ['8.1','За невыполнение законных требований сотрудника правоохранительных органов','s',1]]}
+];
+const AK=[
+ {n:1,t:'Правонарушения в сфере общественного порядка',i:[
+  ['1.1','Распитие спиртных напитков в общественных местах','f','20 000 ₽'],
+  ['1.2','Курение в общественных местах и зданиях','f','15 000 ₽'],
+  ['1.3','Нахождение в непристойном виде в общественных местах','w','предупр. / 100 000 ₽'],
+  ['1.4','Громкая музыка после 23:00','w','предупр. / 50 000 ₽'],
+  ['1.5','Блокирование проходов, входов и выходов','f','100 000 ₽'],
+  ['1.6','Агрессивное приставание к гражданам','f','100 000 ₽'],
+  ['1.7','Порча государственного имущества намеренно','f','100 000 ₽']]},
+ {n:2,t:'Оскорбление и неадекватное поведение',i:[
+  ['2.1','За оскорбление гражданского лица','s',1],
+  ['2.2','За оскорбление должностного лица','s',2],
+  ['2.3','Систематическое использование нецензурной брани в общественных местах','f','50 000 ₽'],
+  ['2.4','Публичные угрозы без факта нападения','s',2],
+  ['2.5','Справление естественных нужд в общественных местах','f','50 000 ₽']]},
+ {n:3,t:'Проституция',i:[
+  ['3.1','За занятие проституцией','s',2],
+  ['3.2','За вовлечение в занятие проституцией','s',3],
+  ['3.3','Организация притонов','s',3],
+  ['3.4','Реклама услуг интимного характера в общественных местах','f','200 000 ₽']]},
+ {n:4,t:'Ношение предметов, скрывающих лицо',i:[
+  ['4.1','Ношение маски гражданским лицом','f','50 000 ₽'],
+  ['4.2','Ношение маски государственными гражданскими служащими','f','100 000 ₽']]},
+ {n:5,t:'Нарушения правил дорожного движения',i:[
+  ['5.1','Превышение установленной скорости движения','f','20 000 ₽'],
+  ['5.2','Игнорирование дорожных знаков и разметки','f','50 000 ₽'],
+  ['5.3','Движение по встречной полосе','f','100 000 ₽'],
+  ['5.4','Оставление ТС в неположенном месте','f','35 000 ₽'],
+  ['5.5','Управление ТС без водительского удостоверения','f','100 000 ₽'],
+  ['5.6','Управление ТС в состоянии алкогольного / наркотического опьянения','f','500 000 ₽']]},
+ {n:6,t:'Нарушение политических прав',i:[
+  ['6.1','Нарушение права гражданина на тайну голосования','s',2],
+  ['6.2','Нарушение агитационного периода','s',1],
+  ['6.3','Незаконная политическая агитация','s',1]]}
+];
+const SRC={uk:{data:UK,label:'УК',desc:'// Уголовный кодекс — розыск 1–6 ★'},ak:{data:AK,label:'АК',desc:'// Административный кодекс — штрафы и розыск'}};
+const count=a=>a.reduce((s,x)=>s+x.i.length,0);
+const COUNTS={'uk-art':UK.length,'uk-pts':count(UK),'ak-art':AK.length};
 
-  function resize() {
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * devicePixelRatio; cv.height = H * devicePixelRatio;
-    cv.style.width = W + 'px'; cv.style.height = H + 'px';
-    ctx.scale(devicePixelRatio, devicePixelRatio);
+const accEl=document.getElementById('acc'),qEl=document.getElementById('q'),segEl=document.getElementById('seg'),
+      descEl=document.getElementById('desc'),termEl=document.getElementById('term');
+let view='uk',openSet=new Set([1]),sel={v:'uk',a:1,id:'1.1'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function tagHTML(it){
+  const [, ,k,v]=it;
+  if(k==='s')return `<span class="tag s">${'★'.repeat(v)}<span class="off">${'★'.repeat(6-v)}</span></span>`;
+  return `<span class="tag ${k}">${esc(v)}</span>`;
+}
+function render(){
+  const q=qEl.value.trim().toLowerCase();
+  const {data,desc}=SRC[view];
+  descEl.textContent=desc;
+  let html='';
+  data.forEach(a=>{
+    const items=a.i.filter(it=>!q||it[0].includes(q)||it[1].toLowerCase().includes(q)||a.t.toLowerCase().includes(q));
+    if(!items.length)return;
+    const open=q?true:openSet.has(a.n);
+    html+=`<div class="art ${open?'open':''}" data-a="${a.n}">
+      <button class="art-h" type="button"><span class="art-n">Ст. ${a.n}</span><span class="art-t">${esc(a.t)}</span><span class="art-c">${items.length}</span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="art-b"><div>${items.map(it=>`
+        <button class="row ${sel.v===view&&sel.a===a.n&&sel.id===it[0]?'sel':''}" type="button" data-a="${a.n}" data-id="${it[0]}">
+          <span class="row-n">${it[0]}</span><span class="row-t">${esc(it[1])}</span>${tagHTML(it)}
+        </button>`).join('')}</div></div></div>`;
+  });
+  accEl.innerHTML=html||'<div class="empty">Ничего не найдено.</div>';
+}
+accEl.addEventListener('click',e=>{
+  const row=e.target.closest('.row');
+  if(row){
+    sel={v:view,a:+row.dataset.a,id:row.dataset.id};
+    accEl.querySelectorAll('.row.sel').forEach(r=>r.classList.remove('sel'));
+    row.classList.add('sel');typeTerm();return;
   }
-  resize();
-  window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
+  const h=e.target.closest('.art-h');
+  if(h){const art=h.parentElement,n=+art.dataset.a;art.classList.toggle('open');art.classList.contains('open')?openSet.add(n):openSet.delete(n)}
+});
+qEl.addEventListener('input',render);
+segEl.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.dataset.v===view)return;
+  view=b.dataset.v;segEl.dataset.v=view;
+  segEl.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  openSet=new Set([1]);sel={v:view,a:1,id:'1.1'};render();typeTerm();
+});
 
-  const COLORS = [
-    'rgba(255,255,255,', 'rgba(255,255,255,', 'rgba(220,215,255,',
-    'rgba(162,155,254,', 'rgba(200,195,255,'
-  ];
-
-  const stars = Array.from({length: 200}, () => ({
-    x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.3 + 0.15,
-    speed: Math.random() * 0.00006 + 0.00002,
-    phase: Math.random() * Math.PI * 2,
-    freq: Math.random() * 0.02 + 0.006,
-    baseAlpha: Math.random() * 0.55 + 0.2,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)]
-  }));
-
-  const shoots = [];
-  function spawnShoot() {
-    shoots.push({
-      x: Math.random() * 0.65, y: Math.random() * 0.35,
-      progress: 0, len: Math.random() * 0.12 + 0.07,
-      speed: Math.random() * 0.012 + 0.01,
-      angle: Math.PI / 5.5 + (Math.random() - 0.5) * 0.3
-    });
-  }
-
-  let t = 0;
-  function draw() {
-    t++;
-    ctx.clearRect(0, 0, W, H);
-
-    for (const s of stars) {
-      s.phase += s.freq;
-      const a = s.baseAlpha * (0.45 + 0.55 * Math.sin(s.phase));
-
-      s.y -= s.speed;
-      if (s.y < -0.01) { s.y = 1.01; s.x = Math.random(); }
-
-      const px = s.x * W, py = s.y * H;
-
-      if (s.r > 0.9) {
-        const glow = ctx.createRadialGradient(px, py, 0, px, py, s.r * 4);
-        glow.addColorStop(0, s.color + (a * 0.25) + ')');
-        glow.addColorStop(1, s.color + '0)');
-        ctx.beginPath();
-        ctx.arc(px, py, s.r * 4, 0, Math.PI * 2);
-        ctx.fillStyle = glow;
-        ctx.fill();
-      }
-
-      ctx.beginPath();
-      ctx.arc(px, py, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = s.color + a + ')';
-      ctx.fill();
+function mskNow(){
+  const d=new Date(Date.now()+new Date().getTimezoneOffset()*60000+3*3600000),p=n=>String(n).padStart(2,'0');
+  return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function buildCmd(){
+  const art=SRC[sel.v].data.find(a=>a.n===sel.a),it=art.i.find(x=>x[0]===sel.id),code=SRC[sel.v].label;
+  const reason=`Ст. ${it[0]} ${code}`;
+  if(it[2]==='s')return {cmd:`/su 228 ${it[3]} ${reason}`,kind:'su',val:it[3],art};
+  const num=it[3].split('/').pop().replace(/[^\d]/g,'');
+  return {cmd:`/ticket 228 ${num} ${reason}`,kind:'ticket',val:num,art};
+}
+let tt=null;
+function typeTerm(){
+  clearInterval(tt);
+  const {cmd,kind,val,art}=buildCmd();
+  const head=`<span class="d">[FWanted]</span> Скрипт загружен!<br><span class="d">&gt;</span> <span class="m">/sw 228</span><br>`;
+  let i=0;
+  tt=setInterval(()=>{
+    i++;
+    termEl.innerHTML=head+`<span class="d">&gt;</span> ${esc(cmd.slice(0,i))}<span class="caret"></span>`;
+    if(i>=cmd.length){
+      clearInterval(tt);
+      const res=kind==='su'?`Розыск <b>${'★'.repeat(val)}</b> выдан`:`Штраф <b>${Number(val).toLocaleString('ru-RU')} ₽</b> выписан`;
+      termEl.innerHTML=head+`<span class="d">&gt;</span> ${esc(cmd)}<br>`+
+        `<span class="d">[FWanted]</span> ${res}<br>`+
+        `<span class="d">[FWanted]</span> <span class="m">${esc(art.t)}</span><br>`+
+        `<span class="d">[FWanted] лог записан · ${mskNow()} МСК</span><br>`+
+        `<span class="d">&gt;</span><span class="caret"></span>`;
     }
+  },20);
+}
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const t=document.getElementById('copyTxt'),done=()=>{t.textContent='Скопировано ✓';setTimeout(()=>t.textContent='Скопировать команду',1500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(buildCmd().cmd).then(done,done);else done();
+});
+render();typeTerm();
 
-    for (let i = shoots.length - 1; i >= 0; i--) {
-      const ss = shoots[i];
-      ss.progress += ss.speed;
-      const alpha = ss.progress < 0.5
-        ? ss.progress * 2
-        : (1 - ss.progress) * 2;
-
-      const tailLen = Math.min(ss.progress, ss.len);
-      const hx = (ss.x + Math.cos(ss.angle) * ss.progress) * W;
-      const hy = (ss.y + Math.sin(ss.angle) * ss.progress) * H;
-      const tx = hx - Math.cos(ss.angle) * tailLen * W;
-      const ty = hy - Math.sin(ss.angle) * tailLen * H;
-
-      const grad = ctx.createLinearGradient(tx, ty, hx, hy);
-      grad.addColorStop(0, `rgba(255,255,255,0)`);
-      grad.addColorStop(0.4, `rgba(180,170,255,${alpha * 0.4})`);
-      grad.addColorStop(1, `rgba(255,255,255,${alpha})`);
-
-      ctx.beginPath();
-      ctx.moveTo(tx, ty);
-      ctx.lineTo(hx, hy);
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(hx, hy, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fill();
-
-      if (ss.progress >= 1) shoots.splice(i, 1);
-    }
-
-    if (Math.random() < 0.003) spawnShoot();
-    requestAnimationFrame(draw);
-  }
-
-  spawnShoot();
-  draw();
-
-  // Accordion
-  function tl(h) { h.parentElement.classList.toggle('open'); }
-
-  // Scroll reveal
-  const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('v'); }), { threshold: 0.08 });
-  document.querySelectorAll('.r').forEach(el => obs.observe(el));
+/* reveal, counters, nav spy */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+const co=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;co.unobserve(e.target);
+  const to=COUNTS[e.target.dataset.c],t0=performance.now();
+  (function f(t){const k=Math.min((t-t0)/1100,1);e.target.textContent=Math.round(to*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(t0);
+}),{threshold:.5});
+document.querySelectorAll('[data-c]').forEach(el=>co.observe(el));
+const links=[...document.querySelectorAll('#links a')];
+const spy=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-45% 0px -50% 0px'});
+['features','codes','commands','install','dev'].forEach(id=>spy.observe(document.getElementById(id)));
 </script>
 </body>
 </html>
